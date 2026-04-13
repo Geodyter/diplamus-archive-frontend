@@ -4,17 +4,14 @@
  * Auth: X-API-Authorization header
  */
 
-const BASE_URL = 'https://archive.diplamus.app-host.eu/api/v1';
-const API_KEY = 'uinFayPObwYkqt8t8YTIDceq/1sMFnHbi08mavaS3W0=';
-
-const defaultHeaders = {
-  'Accept': 'application/json',
-  'Content-Type': 'application/json',
-  'X-API-Authorization': API_KEY,
-};
+/**
+ * All API calls go through our Express backend proxy at /api/diplamus-proxy
+ * to avoid CORS issues with the upstream archive.diplamus.app-host.eu server.
+ */
+const BASE_URL = '/api/diplamus-proxy';
 
 async function apiFetch<T>(path: string, params?: Record<string, string | number | boolean>): Promise<T> {
-  const url = new URL(`${BASE_URL}${path}`);
+  const url = new URL(`${window.location.origin}${BASE_URL}${path}`);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') {
@@ -22,7 +19,9 @@ async function apiFetch<T>(path: string, params?: Record<string, string | number
       }
     });
   }
-  const res = await fetch(url.toString(), { headers: defaultHeaders });
+  const res = await fetch(url.toString(), {
+    headers: { 'Accept': 'application/json' },
+  });
   if (!res.ok) {
     throw new Error(`API error ${res.status}: ${res.statusText}`);
   }

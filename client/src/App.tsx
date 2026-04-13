@@ -13,8 +13,8 @@ import ExhibitDetail from "./pages/ExhibitDetail";
 import Tours from "./pages/Tours";
 import Halls from "./pages/Halls";
 import Collections from "./pages/Collections";
-
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <div className="flex flex-col min-h-screen">
       <Header />

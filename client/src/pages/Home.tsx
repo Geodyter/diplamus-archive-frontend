@@ -8,7 +8,6 @@ import { Link } from 'wouter';
 import { ArrowRight, Box, Image as ImageIcon, BookOpen, MapPin } from 'lucide-react';
 import { api, Material, Period, getTranslation, getImageUrl } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { LoadingSpinner } from '@/components/LoadingState';
 
 const HERO_IMAGE = 'https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/hero-archive-c6kQCwMZzz2XQ7xKyyaXPK.webp';
 const HERO_3D = 'https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/hero-3d-HnnnYMCESBpMcLUmx9S8f3.webp';
@@ -18,7 +17,6 @@ export default function Home() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [stats, setStats] = useState({ materials: 0, periods: 0, places: 0 });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -37,8 +35,6 @@ export default function Home() {
         });
       } catch (err) {
         console.error('Home load error:', err);
-      } finally {
-        setLoading(false);
       }
     }
     load();
@@ -48,44 +44,30 @@ export default function Home() {
     <div className="page-enter min-h-screen" style={{ background: 'var(--cream)' }}>
       {/* ── HERO ── */}
       <section className="relative overflow-hidden" style={{ minHeight: '85vh' }}>
-        {/* Background image */}
         <div className="absolute inset-0">
-          <img
-            src={HERO_IMAGE}
-            alt="DiPlaMus Archive"
-            className="w-full h-full object-cover"
-          />
+          <img src={HERO_IMAGE} alt="DiPlaMus Archive" className="w-full h-full object-cover" />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(105deg, rgba(250,247,242,0.97) 0%, rgba(250,247,242,0.92) 40%, rgba(250,247,242,0.5) 70%, rgba(250,247,242,0.1) 100%)' }} />
         </div>
-
-        {/* Content */}
         <div className="relative container flex items-center" style={{ minHeight: '85vh' }}>
           <div className="max-w-xl py-20">
-            {/* Eyebrow */}
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px w-8" style={{ background: 'var(--terracotta)' }} />
               <span className="text-xs font-body font-semibold tracking-widest uppercase" style={{ color: 'var(--terracotta)', letterSpacing: '0.14em' }}>
                 CIDOC-CRM Documentation
               </span>
             </div>
-
-            {/* Title */}
             <h1 className="font-display font-semibold leading-tight mb-4" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', color: 'var(--charcoal)' }}>
               {t('home.hero.title')}
               <br />
               <span style={{ color: 'var(--terracotta)' }}>DiPlaMus</span>
             </h1>
-
             <p className="text-base md:text-lg font-body mb-8 leading-relaxed" style={{ color: '#4a4540', maxWidth: '480px' }}>
               {t('home.hero.description')}
             </p>
-
-            {/* CTAs */}
             <div className="flex flex-wrap gap-3">
               <Link href="/explore">
                 <button className="flex items-center gap-2 px-6 py-3 text-sm font-body font-semibold rounded-sm text-white transition-all hover:opacity-90 active:scale-95" style={{ background: 'var(--terracotta)' }}>
-                  {t('home.hero.cta')}
-                  <ArrowRight size={16} />
+                  {t('home.hero.cta')} <ArrowRight size={16} />
                 </button>
               </Link>
               <Link href="/tours">
@@ -109,15 +91,9 @@ export default function Home() {
               { icon: <Box size={20} />, value: stats.materials || '—', label: t('home.stats.materials') },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center md:items-start gap-1 md:px-8 first:pl-0">
-                <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--terracotta)' }}>
-                  {stat.icon}
-                </div>
-                <div className="font-display font-semibold text-3xl" style={{ color: 'var(--charcoal)' }}>
-                  {stat.value}
-                </div>
-                <div className="text-xs font-body font-medium tracking-wider uppercase" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.1em' }}>
-                  {stat.label}
-                </div>
+                <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--terracotta)' }}>{stat.icon}</div>
+                <div className="font-display font-semibold text-3xl" style={{ color: 'var(--charcoal)' }}>{stat.value}</div>
+                <div className="text-xs font-body font-medium tracking-wider uppercase" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.1em' }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -131,12 +107,8 @@ export default function Home() {
             <div className="flex items-end justify-between mb-10">
               <div>
                 <div className="divider-terracotta w-10 mb-3" />
-                <h2 className="font-display font-semibold text-2xl md:text-3xl" style={{ color: 'var(--charcoal)' }}>
-                  {t('home.collections.title')}
-                </h2>
-                <p className="mt-1 text-sm font-body" style={{ color: 'var(--muted-foreground)' }}>
-                  {t('home.collections.subtitle')}
-                </p>
+                <h2 className="font-display font-semibold text-2xl md:text-3xl" style={{ color: 'var(--charcoal)' }}>{t('home.collections.title')}</h2>
+                <p className="mt-1 text-sm font-body" style={{ color: 'var(--muted-foreground)' }}>{t('home.collections.subtitle')}</p>
               </div>
               <Link href="/collections">
                 <span className="text-sm font-body font-medium flex items-center gap-1 hover:gap-2 transition-all" style={{ color: 'var(--terracotta)' }}>
@@ -144,7 +116,6 @@ export default function Home() {
                 </span>
               </Link>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 card-stagger">
               {periods.map(period => {
                 const name = getTranslation(period.translations, lang)?.name || period.name;
@@ -163,8 +134,7 @@ export default function Home() {
                       <div className="absolute bottom-0 left-0 right-0 p-5">
                         <h3 className="font-display font-semibold text-lg text-white leading-tight">{name}</h3>
                         <div className="flex items-center gap-1 mt-1 text-white/70 text-xs font-body">
-                          <span>{t('common.view_all')}</span>
-                          <ArrowRight size={12} />
+                          <span>{t('common.view_all')}</span> <ArrowRight size={12} />
                         </div>
                       </div>
                     </article>
@@ -183,15 +153,10 @@ export default function Home() {
             <div className="flex items-end justify-between mb-10">
               <div>
                 <div className="divider-terracotta w-10 mb-3" />
-                <h2 className="font-display font-semibold text-2xl md:text-3xl" style={{ color: 'var(--charcoal)' }}>
-                  {t('home.materials.title')}
-                </h2>
-                <p className="mt-1 text-sm font-body" style={{ color: 'var(--muted-foreground)' }}>
-                  {t('home.materials.subtitle')}
-                </p>
+                <h2 className="font-display font-semibold text-2xl md:text-3xl" style={{ color: 'var(--charcoal)' }}>{t('home.materials.title')}</h2>
+                <p className="mt-1 text-sm font-body" style={{ color: 'var(--muted-foreground)' }}>{t('home.materials.subtitle')}</p>
               </div>
             </div>
-
             <div className="flex flex-wrap gap-2 card-stagger">
               {materials.map(mat => {
                 const name = getTranslation(mat.translations, lang)?.name || mat.name;
@@ -215,32 +180,20 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-px w-8" style={{ background: 'var(--terracotta)' }} />
-                <span className="text-xs font-body font-semibold tracking-widest uppercase" style={{ color: 'var(--terracotta)', letterSpacing: '0.14em' }}>
-                  3D Documentation
-                </span>
+                <span className="text-xs font-body font-semibold tracking-widest uppercase" style={{ color: 'var(--terracotta)', letterSpacing: '0.14em' }}>3D Documentation</span>
               </div>
-              <h2 className="font-display font-semibold text-2xl md:text-3xl text-white mb-4">
-                {t('home.3d.title')}
-              </h2>
-              <p className="text-base font-body mb-8 leading-relaxed" style={{ color: '#a09890' }}>
-                {t('home.3d.description')}
-              </p>
+              <h2 className="font-display font-semibold text-2xl md:text-3xl text-white mb-4">{t('home.3d.title')}</h2>
+              <p className="text-base font-body mb-8 leading-relaxed" style={{ color: '#a09890' }}>{t('home.3d.description')}</p>
               <Link href="/explore?type=3d">
                 <button className="flex items-center gap-2 px-6 py-3 text-sm font-body font-semibold rounded-sm text-white transition-all hover:opacity-90" style={{ background: 'var(--terracotta)' }}>
-                  <Box size={16} />
-                  {t('home.3d.cta')}
+                  <Box size={16} /> {t('home.3d.cta')}
                 </button>
               </Link>
             </div>
             <div className="relative">
               <div className="rounded-sm overflow-hidden" style={{ aspectRatio: '4/3' }}>
-                <img
-                  src={HERO_3D}
-                  alt="3D Documentation"
-                  className="w-full h-full object-cover"
-                />
+                <img src={HERO_3D} alt="3D Documentation" className="w-full h-full object-cover" />
               </div>
-              {/* Decorative corner */}
               <div className="absolute -top-3 -right-3 w-16 h-16 rounded-sm opacity-20" style={{ background: 'var(--terracotta)' }} />
               <div className="absolute -bottom-3 -left-3 w-10 h-10 rounded-sm opacity-20" style={{ background: 'var(--gold)' }} />
             </div>
