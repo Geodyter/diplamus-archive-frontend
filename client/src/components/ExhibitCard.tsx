@@ -4,8 +4,8 @@
  * Shows exhibit thumbnail, title, metadata badges
  */
 import { Link } from 'wouter';
-import { Box, Image, Video, FileText } from 'lucide-react';
-import { NavigationPoint, getTranslation, getImageUrl } from '@/lib/api';
+import { Box, Image, Video } from 'lucide-react';
+import { NavigationPoint, getTranslation, getImageUrl, getTaxonomyName } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ExhibitCardProps {
@@ -18,17 +18,20 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1578662996442-48f60103fc9
 export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps) {
   const { lang } = useLanguage();
   const translation = getTranslation(exhibit.translations, lang);
-  const title = translation?.name || exhibit.title || 'Αδιευκρίνιστο';
-  const description = translation?.shortDescription || translation?.description || '';
+  const title = translation?.title || exhibit.title || 'Αδιευκρίνιστο';
+  const description = translation?.text || exhibit.text || '';
   const imageUrl = getImageUrl(exhibit.image, 'medium') || PLACEHOLDER;
 
-  const hasFiles = exhibit.files && exhibit.files.length > 0;
-  const has3D = exhibit.files?.some(f => f.type === '3d');
-  const hasVideo = exhibit.files?.some(f => f.type === 'video');
-  const hasImages = exhibit.files?.some(f => f.type === 'image') || exhibit.image?.uri;
+  const has3D = exhibit.files?.some(f => f.file_category === '3d' || f.file_extension?.match(/^(glb|gltf)$/i));
+  const hasVideo = exhibit.files?.some(f => f.file_category === 'video' || f.file_extension?.match(/^(mp4|webm|mov)$/i));
+  const hasImages = exhibit.files?.some(f => f.file_category === 'photo') || exhibit.image?.uri;
 
-  const material = exhibit.materials?.[0];
-  const materialName = material ? getTranslation(material.translations, lang)?.name : null;
+  // Material from material array (new API field)
+  const materialArr = exhibit.material || exhibit.materials || [];
+  const materialName = materialArr.length > 0 ? getTaxonomyName(materialArr[0], lang) : null;
+
+  // Collection from period field
+  const collectionName = exhibit.period ? getTaxonomyName(exhibit.period, lang) : null;
 
   if (view === 'list') {
     return (
@@ -48,13 +51,13 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
               <p className="text-sm font-body text-[#6b6560] mt-1 line-clamp-2">{description}</p>
             )}
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {materialName && <span className="meta-badge">{materialName}</span>}
+              {materialName && materialName !== '—' && <span className="meta-badge">{materialName}</span>}
               {has3D && <span className="meta-badge flex items-center gap-1"><Box size={10} />3D</span>}
               {hasVideo && <span className="meta-badge flex items-center gap-1"><Video size={10} />Video</span>}
             </div>
           </div>
           <div className="text-xs font-body text-[#a09890] flex-shrink-0">
-            #{exhibit.id}
+            #{exhibit.code || exhibit.id}
           </div>
         </article>
       </Link>
@@ -73,29 +76,27 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
             onError={e => { (e.target as HTMLImageElement).src = PLACEHOLDER; }}
           />
           {/* Media type badges */}
-          {hasFiles && (
-            <div className="absolute top-2 right-2 flex gap-1">
-              {has3D && (
-                <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-body font-semibold rounded-sm bg-[#2C2C2C]/80 text-white backdrop-blur-sm">
-                  <Box size={10} /> 3D
-                </span>
-              )}
-              {hasVideo && (
-                <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-body font-semibold rounded-sm bg-[#2C2C2C]/80 text-white backdrop-blur-sm">
-                  <Video size={10} />
-                </span>
-              )}
-              {hasImages && !has3D && !hasVideo && (
-                <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-body font-semibold rounded-sm bg-[#2C2C2C]/80 text-white backdrop-blur-sm">
-                  <Image size={10} />
-                </span>
-              )}
-            </div>
-          )}
+          <div className="absolute top-2 right-2 flex gap-1">
+            {has3D && (
+              <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-body font-semibold rounded-sm bg-[#2C2C2C]/80 text-white backdrop-blur-sm">
+                <Box size={10} /> 3D
+              </span>
+            )}
+            {hasVideo && (
+              <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-body font-semibold rounded-sm bg-[#2C2C2C]/80 text-white backdrop-blur-sm">
+                <Video size={10} />
+              </span>
+            )}
+            {hasImages && !has3D && !hasVideo && (
+              <span className="flex items-center gap-1 px-2 py-0.5 text-xs font-body font-semibold rounded-sm bg-[#2C2C2C]/80 text-white backdrop-blur-sm">
+                <Image size={10} />
+              </span>
+            )}
+          </div>
           {/* ID badge */}
           <div className="absolute bottom-2 left-2">
             <span className="px-2 py-0.5 text-xs font-body bg-white/80 backdrop-blur-sm rounded-sm text-[#6b6560]">
-              #{exhibit.id}
+              #{exhibit.code || exhibit.id}
             </span>
           </div>
         </div>
@@ -109,11 +110,9 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
             <p className="text-sm font-body text-[#6b6560] line-clamp-2 mb-3">{description}</p>
           )}
           <div className="flex items-center gap-2 flex-wrap">
-            {materialName && <span className="meta-badge">{materialName}</span>}
-            {exhibit.periods?.[0] && (
-              <span className="meta-badge">
-                {getTranslation(exhibit.periods[0].translations, lang)?.name}
-              </span>
+            {materialName && materialName !== '—' && <span className="meta-badge">{materialName}</span>}
+            {collectionName && collectionName !== '—' && (
+              <span className="meta-badge">{collectionName}</span>
             )}
           </div>
         </div>

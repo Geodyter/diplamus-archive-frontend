@@ -2,12 +2,9 @@
  * DiPlaMus Archive API Client
  * Base URL: https://archive.diplamus.app-host.eu/api/v1
  * Auth: X-API-Authorization header
+ * All calls go through /api/diplamus-proxy to avoid CORS.
  */
 
-/**
- * All API calls go through our Express backend proxy at /api/diplamus-proxy
- * to avoid CORS issues with the upstream archive.diplamus.app-host.eu server.
- */
 const BASE_URL = '/api/diplamus-proxy';
 
 async function apiFetch<T>(path: string, params?: Record<string, string | number | boolean>): Promise<T> {
@@ -34,17 +31,21 @@ export interface Translation {
   languageId: number;
   languageCode: string;
   languageName: string;
-  name: string;
+  // Navigation points use 'title' + 'text' for name + description
+  title?: string;
+  text?: string;
+  // Taxonomy items use 'name'
+  name?: string;
   description?: string;
   shortDescription?: string;
 }
 
 export interface ImageAsset {
   uri?: string;
-  width?: number;
-  height?: number;
-  thumbnails?: {
-    medium?: string;
+  width?: number | null;
+  height?: number | null;
+  thumbnails?: string | {
+    medium?: { uri: string; width: number; height: number };
     'ls-large'?: { uri: string; width: number; height: number };
     'pt-large'?: { uri: string; width: number; height: number };
   };
@@ -91,7 +92,9 @@ export interface Tour {
 
 export interface Hall {
   id: number;
-  name: string;
+  title?: string;
+  name?: string;
+  description?: string;
   image: ImageAsset;
   createdAt: string;
   updatedAt: string;
@@ -100,69 +103,88 @@ export interface Hall {
   navigationPoints?: NavigationPoint[];
 }
 
+/**
+ * MediaFile — actual API response shape from navigation_points/:id
+ * The API returns:
+ *   file_category: '3d' | 'photo' | 'video' | 'document'
+ *   file_path: full URL to the file
+ *   image: { uri, width, height, thumbnails } for photos
+ */
+export interface MediaFile {
+  id: number;
+  title: string;
+  file_name: string;
+  file_path: string;        // URL for 3D/document files
+  file_type: string;        // 'file' | 'image' etc
+  file_category: string;    // '3d' | 'photo' | 'video' | 'document'
+  file_extension: string;   // 'glb', 'jpg', 'mp4' etc
+  file_size: string;
+  image?: ImageAsset;       // populated for photo files
+  createdAt: string;
+  updatedAt: string;
+  translations: Translation[];
+}
+
+export interface TaxonomyItem {
+  id: number;
+  name: string;
+  image: ImageAsset;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  translations: Translation[];
+}
+
+export type Material = TaxonomyItem;
+export type Period = TaxonomyItem;
+export type Place = TaxonomyItem;
+export type Usage = TaxonomyItem;
+export type ReservationStatus = TaxonomyItem;
+
+/**
+ * NavigationPoint — actual API response shape from navigation_points/:id
+ */
 export interface NavigationPoint {
   id: number;
   title: string;
-  description?: string;
-  shortDescription?: string;
+  text?: string;                      // main description (top-level)
+  code?: string;                      // inventory code e.g. "Μ.Γ.11"
+  registration_number?: string;       // manufacturer/creator
+  height?: string;
+  width?: string;
+  length?: string;
+  monumentName?: string;              // date/era e.g. "Δεκαετία 1970"
+  firstPlace?: TaxonomyItem | null;   // primary location
+  secondPlace?: TaxonomyItem | null;  // secondary location (room)
+  place?: TaxonomyItem[];
+  placeText?: string | null;
+  commentPlace?: string;
+  city?: TaxonomyItem[];
+  location?: string;                  // country of origin
+  specialLocation?: string;           // language of origin
+  material?: TaxonomyItem[];
+  description?: string;               // CIDOC description
+  dimensionComments?: string;
+  reservationStatus?: TaxonomyItem | null;
+  period?: TaxonomyItem | null;       // collection
+  inscription?: string;
+  publications?: string;
+  otherObservations?: string;
+  conservation?: string;              // copyright/license
+  usage?: TaxonomyItem | null;        // acquisition method
+  validated?: number;
+  sendOPS?: number;
   image?: ImageAsset;
   createdAt: string;
   updatedAt: string;
   translations: Translation[];
   hall?: Hall;
   files?: MediaFile[];
-  materials?: Material[];
-  periods?: Period[];
-  places?: Place[];
-  usages?: Usage[];
-  cidoc?: CidocData;
-}
-
-export interface MediaFile {
-  id: number;
-  type: 'image' | 'video' | '3d' | 'audio' | 'document';
-  uri: string;
-  name?: string;
-  mimeType?: string;
-  width?: number;
-  height?: number;
-  thumbnails?: Record<string, string | { uri: string }>;
-}
-
-export interface Material {
-  id: number;
-  name: string;
-  image: ImageAsset;
-  createdAt: string;
-  updatedAt: string;
-  translations: Translation[];
-}
-
-export interface Period {
-  id: number;
-  name: string;
-  image: ImageAsset;
-  createdAt: string;
-  updatedAt: string;
-  translations: Translation[];
-}
-
-export interface Place {
-  id: number;
-  name: string;
-  image: ImageAsset;
-  createdAt: string;
-  updatedAt: string;
-  translations: Translation[];
-}
-
-export interface Usage {
-  id: number;
-  name: string;
-  image: ImageAsset;
-  createdAt: string;
-  updatedAt: string;
-  translations: Translation[];
+  // Legacy fields (kept for backwards compat)
+  materials?: TaxonomyItem[];
+  periods?: TaxonomyItem[];
+  places?: TaxonomyItem[];
+  usages?: TaxonomyItem[];
 }
 
 export interface Language {
@@ -170,10 +192,6 @@ export interface Language {
   name: string;
   code: string;
   image: ImageAsset;
-}
-
-export interface CidocData {
-  [key: string]: unknown;
 }
 
 // ---- API Functions ----
@@ -187,25 +205,21 @@ export interface ListParams {
 }
 
 export const api = {
-  // Tours
   getTours: (params?: ListParams) =>
     apiFetch<PaginatedResponse<Tour>>('/tours', params as Record<string, string | number | boolean>),
   getTour: (id: number) =>
     apiFetch<SingleResponse<Tour>>(`/tours/${id}`),
 
-  // Halls
   getHalls: (params?: ListParams) =>
     apiFetch<PaginatedResponse<Hall>>('/halls', params as Record<string, string | number | boolean>),
   getHall: (id: number) =>
     apiFetch<SingleResponse<Hall>>(`/halls/${id}`),
 
-  // Navigation Points (Exhibits)
   getNavigationPoints: (params?: ListParams) =>
     apiFetch<PaginatedResponse<NavigationPoint>>('/navigation_points', params as Record<string, string | number | boolean>),
   getNavigationPoint: (id: number) =>
     apiFetch<SingleResponse<NavigationPoint>>(`/navigation_points/${id}`),
 
-  // Taxonomy
   getMaterials: (params?: ListParams) =>
     apiFetch<PaginatedResponse<Material>>('/materials', params as Record<string, string | number | boolean>),
   getPeriods: (params?: ListParams) =>
@@ -221,15 +235,61 @@ export const api = {
 // ---- Helpers ----
 
 export function getTranslation(translations: Translation[], langCode: string): Translation | undefined {
-  return translations.find(t => t.languageCode === langCode) || translations[0];
+  return translations?.find(t => t.languageCode === langCode) || translations?.[0];
 }
 
 export function getImageUrl(image: ImageAsset | undefined, size: 'original' | 'medium' | 'large' = 'original'): string | null {
-  if (!image) return null;
-  if (size === 'medium' && image.thumbnails?.medium) return image.thumbnails.medium;
-  if (size === 'large') {
-    const ls = image.thumbnails?.['ls-large'];
-    if (ls && typeof ls === 'object') return ls.uri;
+  if (!image || typeof image !== 'object') return null;
+  if (size === 'medium' && image.thumbnails && typeof image.thumbnails === 'object') {
+    const th = image.thumbnails as { medium?: { uri: string } };
+    if (th.medium?.uri) return th.medium.uri;
+  }
+  if (size === 'large' && image.thumbnails && typeof image.thumbnails === 'object') {
+    const th = image.thumbnails as { 'ls-large'?: { uri: string } };
+    if (th['ls-large']?.uri) return th['ls-large'].uri;
   }
   return image.uri || null;
+}
+
+const DIPLAMUS_STORAGE_BASE = 'https://archive.diplamus.app-host.eu/storage';
+
+/**
+ * Convert a direct archive.diplamus.app-host.eu/storage URL to a proxied URL
+ * to avoid CORS issues when loading GLB models, images, and videos.
+ */
+export function proxyStorageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.includes(DIPLAMUS_STORAGE_BASE)) {
+    return url.replace(DIPLAMUS_STORAGE_BASE, '/diplamus-storage');
+  }
+  return url;
+}
+
+/** Get the display URL for a MediaFile (proxied to avoid CORS) */
+export function getFileUrl(file: MediaFile): string | null {
+  // For 3D/documents: use file_path (proxied)
+  if (file.file_category === '3d' || file.file_type === 'file') {
+    return proxyStorageUrl(file.file_path) || null;
+  }
+  // For photos: prefer image.uri (proxied)
+  if (file.image?.uri) return proxyStorageUrl(file.image.uri);
+  // Fallback to file_path (proxied)
+  return proxyStorageUrl(file.file_path) || null;
+}
+
+/** Get thumbnail URL for a MediaFile (proxied to avoid CORS) */
+export function getFileThumbnail(file: MediaFile): string | null {
+  if (file.image?.thumbnails && typeof file.image.thumbnails === 'object') {
+    const th = file.image.thumbnails as { medium?: { uri: string }; 'ls-large'?: { uri: string } };
+    const url = th.medium?.uri || th['ls-large']?.uri || file.image.uri || null;
+    return proxyStorageUrl(url);
+  }
+  return proxyStorageUrl(file.image?.uri) || null;
+}
+
+/** Get the display name of a taxonomy item in the given language */
+export function getTaxonomyName(item: TaxonomyItem | null | undefined, langCode: string): string {
+  if (!item) return '—';
+  const tr = getTranslation(item.translations || [], langCode);
+  return tr?.name || item.name || '—';
 }
