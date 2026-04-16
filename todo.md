@@ -18,3 +18,9 @@
 ## Υπολειπόμενες Διορθώσεις (2026-04-16)
 - [x] Πλήρης αφαίρεση Περιηγήσεων: App.tsx route, Tours.tsx page, translation keys
 - [x] Επαλήθευση logo στον browser (hard refresh)
+
+## Κρίσιμες Διορθώσεις (2026-04-16 #2)
+- [x] Μαύρες εικόνες στο published site — CORS ενεργοποιήθηκε από τον developer, αφαιρέθηκε ο proxy, χρησιμοποιούνται direct URLs
+- [x] Φίλτρα Εξερεύνησης — server-side filtering με period_id, material_id, place_id, usage_id (υποστηρίζεται πλέον από το API)
+- [x] Αφαίρεση "Αίθουσα" από τα φίλτρα — δεν υπάρχει πλέον στο sidebar
+- [x] Εμφάνιση συλλογής (period) στις κάρτες εκθεμάτων στη λίστα

@@ -202,6 +202,11 @@ export interface ListParams {
   content?: string;
   sort?: string;
   send_ops?: number;
+  // Filter params (now supported by API)
+  period_id?: number | string;
+  material_id?: number | string;
+  place_id?: number | string;
+  usage_id?: number | string;
 }
 
 export const api = {
@@ -238,17 +243,20 @@ export function getTranslation(translations: Translation[], langCode: string): T
   return translations?.find(t => t.languageCode === langCode) || translations?.[0];
 }
 
-const DIPLAMUS_STORAGE_BASE = 'https://archive.diplamus.app-host.eu/storage';
+/**
+ * Get the direct storage URL — CORS is now enabled on the upstream server
+ * so we can use the original URLs directly without a proxy.
+ */
+export function getDirectStorageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url;
+}
 
 /**
- * Convert a direct archive.diplamus.app-host.eu/storage URL to a proxied URL
- * to avoid CORS issues when loading GLB models, images, and videos.
+ * Kept for backwards compatibility — now returns the URL directly (no proxy needed).
  */
 export function proxyStorageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  if (url.includes(DIPLAMUS_STORAGE_BASE)) {
-    return url.replace(DIPLAMUS_STORAGE_BASE, '/diplamus-storage');
-  }
   return url;
 }
 
@@ -256,35 +264,34 @@ export function getImageUrl(image: ImageAsset | undefined, size: 'original' | 'm
   if (!image || typeof image !== 'object') return null;
   if (size === 'medium' && image.thumbnails && typeof image.thumbnails === 'object') {
     const th = image.thumbnails as { medium?: { uri: string } };
-    if (th.medium?.uri) return proxyStorageUrl(th.medium.uri);
+    if (th.medium?.uri) return th.medium.uri;
   }
   if (size === 'large' && image.thumbnails && typeof image.thumbnails === 'object') {
     const th = image.thumbnails as { 'ls-large'?: { uri: string } };
-    if (th['ls-large']?.uri) return proxyStorageUrl(th['ls-large']?.uri);
+    if (th['ls-large']?.uri) return th['ls-large']?.uri;
   }
-  return proxyStorageUrl(image.uri) || null;
+  return image.uri || null;
 }
 
-/** Get the display URL for a MediaFile (proxied to avoid CORS) */
+/** Get the display URL for a MediaFile (direct, CORS enabled) */
 export function getFileUrl(file: MediaFile): string | null {
-  // For 3D/documents: use file_path (proxied)
+  // For 3D/documents: use file_path
   if (file.file_category === '3d' || file.file_type === 'file') {
-    return proxyStorageUrl(file.file_path) || null;
+    return file.file_path || null;
   }
-  // For photos: prefer image.uri (proxied)
-  if (file.image?.uri) return proxyStorageUrl(file.image.uri);
-  // Fallback to file_path (proxied)
-  return proxyStorageUrl(file.file_path) || null;
+  // For photos: prefer image.uri
+  if (file.image?.uri) return file.image.uri;
+  // Fallback to file_path
+  return file.file_path || null;
 }
 
-/** Get thumbnail URL for a MediaFile (proxied to avoid CORS) */
+/** Get thumbnail URL for a MediaFile (direct, CORS enabled) */
 export function getFileThumbnail(file: MediaFile): string | null {
   if (file.image?.thumbnails && typeof file.image.thumbnails === 'object') {
     const th = file.image.thumbnails as { medium?: { uri: string }; 'ls-large'?: { uri: string } };
-    const url = th.medium?.uri || th['ls-large']?.uri || file.image.uri || null;
-    return proxyStorageUrl(url);
+    return th.medium?.uri || th['ls-large']?.uri || file.image.uri || null;
   }
-  return proxyStorageUrl(file.image?.uri) || null;
+  return file.image?.uri || null;
 }
 
 /** Get the display name of a taxonomy item in the given language */

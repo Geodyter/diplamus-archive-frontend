@@ -1,7 +1,7 @@
 /**
  * DiPlaMus Archive — ExhibitCard Component
  * Design: Contemporary Museum Digital
- * Shows exhibit thumbnail, title, metadata badges
+ * Shows exhibit thumbnail, title, metadata badges (collection, material, media types)
  */
 import { Link } from 'wouter';
 import { Box, Image, Video } from 'lucide-react';
@@ -26,11 +26,11 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
   const hasVideo = exhibit.files?.some(f => f.file_category === 'video' || f.file_extension?.match(/^(mp4|webm|mov)$/i));
   const hasImages = exhibit.files?.some(f => f.file_category === 'photo') || exhibit.image?.uri;
 
-  // Material from material array (new API field)
+  // Material from material array
   const materialArr = exhibit.material || exhibit.materials || [];
   const materialName = materialArr.length > 0 ? getTaxonomyName(materialArr[0], lang) : null;
 
-  // Collection from period field
+  // Collection from period field (now returned by list endpoint)
   const collectionName = exhibit.period ? getTaxonomyName(exhibit.period, lang) : null;
 
   if (view === 'list') {
@@ -47,6 +47,9 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-display font-semibold text-base text-[#2C2C2C] truncate">{title}</h3>
+            {collectionName && collectionName !== '—' && (
+              <p className="text-xs font-body text-[#B5533C] mt-0.5 font-medium">{collectionName}</p>
+            )}
             {description && (
               <p className="text-sm font-body text-[#6b6560] mt-1 line-clamp-2">{description}</p>
             )}
@@ -103,6 +106,11 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
 
         {/* Content */}
         <div className="p-4">
+          {collectionName && collectionName !== '—' && (
+            <p className="text-xs font-body text-[#B5533C] font-semibold uppercase tracking-wide mb-1">
+              {collectionName}
+            </p>
+          )}
           <h3 className="font-display font-semibold text-base text-[#2C2C2C] line-clamp-2 leading-snug mb-2">
             {title}
           </h3>
@@ -111,9 +119,6 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
           )}
           <div className="flex items-center gap-2 flex-wrap">
             {materialName && materialName !== '—' && <span className="meta-badge">{materialName}</span>}
-            {collectionName && collectionName !== '—' && (
-              <span className="meta-badge">{collectionName}</span>
-            )}
           </div>
         </div>
       </article>

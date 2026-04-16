@@ -1,7 +1,7 @@
 /**
  * DiPlaMus Archive — Explore/Search Page
  * Design: Contemporary Museum Digital
- * Features: Faceted search, grid/list view, pagination, sort
+ * Features: Faceted search (server-side), grid/list view, pagination, sort
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
@@ -23,9 +23,12 @@ export default function Explore() {
     }
     return new URLSearchParams(location.includes('?') ? location.split('?')[1] : '');
   }, [location]);
+
   const initialQuery = params.get('q') || '';
   const initialMaterial = params.get('material') || '';
   const initialPeriod = params.get('period') || '';
+  const initialPlace = params.get('place') || '';
+  const initialUsage = params.get('usage') || '';
 
   // State
   const [query, setQuery] = useState(initialQuery);
@@ -35,8 +38,8 @@ export default function Explore() {
   const [page, setPage] = useState(1);
   const [filterMaterial, setFilterMaterial] = useState(initialMaterial);
   const [filterPeriod, setFilterPeriod] = useState(initialPeriod);
-  const [filterPlace, setFilterPlace] = useState('');
-  const [filterUsage, setFilterUsage] = useState('');
+  const [filterPlace, setFilterPlace] = useState(initialPlace);
+  const [filterUsage, setFilterUsage] = useState(initialUsage);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Data
@@ -67,7 +70,7 @@ export default function Explore() {
     }).catch(console.error);
   }, []);
 
-  // Load exhibits
+  // Load exhibits with server-side filtering
   const loadExhibits = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -151,7 +154,7 @@ export default function Explore() {
         />
       )}
 
-      {/* Places */}
+      {/* Places / Τοποθεσία */}
       {places.length > 0 && (
         <FilterGroup
           label={t('explore.filters.place')}
@@ -161,7 +164,7 @@ export default function Explore() {
         />
       )}
 
-      {/* Usages */}
+      {/* Usages / Τρόπος Απόκτησης */}
       {usages.length > 0 && (
         <FilterGroup
           label={t('explore.filters.usage')}
@@ -361,7 +364,7 @@ function FilterGroup({
             className="accent-[#B5533C]"
           />
           <span className="text-sm font-body group-hover:text-[#B5533C] transition-colors" style={{ color: value === '' ? 'var(--terracotta)' : 'var(--charcoal)' }}>
-            Όλα / All
+            Όλα
           </span>
         </label>
         {options.map(opt => (
