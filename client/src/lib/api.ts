@@ -238,19 +238,6 @@ export function getTranslation(translations: Translation[], langCode: string): T
   return translations?.find(t => t.languageCode === langCode) || translations?.[0];
 }
 
-export function getImageUrl(image: ImageAsset | undefined, size: 'original' | 'medium' | 'large' = 'original'): string | null {
-  if (!image || typeof image !== 'object') return null;
-  if (size === 'medium' && image.thumbnails && typeof image.thumbnails === 'object') {
-    const th = image.thumbnails as { medium?: { uri: string } };
-    if (th.medium?.uri) return th.medium.uri;
-  }
-  if (size === 'large' && image.thumbnails && typeof image.thumbnails === 'object') {
-    const th = image.thumbnails as { 'ls-large'?: { uri: string } };
-    if (th['ls-large']?.uri) return th['ls-large'].uri;
-  }
-  return image.uri || null;
-}
-
 const DIPLAMUS_STORAGE_BASE = 'https://archive.diplamus.app-host.eu/storage';
 
 /**
@@ -263,6 +250,19 @@ export function proxyStorageUrl(url: string | null | undefined): string | null {
     return url.replace(DIPLAMUS_STORAGE_BASE, '/diplamus-storage');
   }
   return url;
+}
+
+export function getImageUrl(image: ImageAsset | undefined, size: 'original' | 'medium' | 'large' = 'original'): string | null {
+  if (!image || typeof image !== 'object') return null;
+  if (size === 'medium' && image.thumbnails && typeof image.thumbnails === 'object') {
+    const th = image.thumbnails as { medium?: { uri: string } };
+    if (th.medium?.uri) return proxyStorageUrl(th.medium.uri);
+  }
+  if (size === 'large' && image.thumbnails && typeof image.thumbnails === 'object') {
+    const th = image.thumbnails as { 'ls-large'?: { uri: string } };
+    if (th['ls-large']?.uri) return proxyStorageUrl(th['ls-large']?.uri);
+  }
+  return proxyStorageUrl(image.uri) || null;
 }
 
 /** Get the display URL for a MediaFile (proxied to avoid CORS) */

@@ -70,9 +70,9 @@ export default function Home() {
                   {t('home.hero.cta')} <ArrowRight size={16} />
                 </button>
               </Link>
-              <Link href="/tours">
+              <Link href="/collections">
                 <button className="flex items-center gap-2 px-6 py-3 text-sm font-body font-medium rounded-sm border transition-all hover:border-[#B5533C] hover:text-[#B5533C]" style={{ borderColor: '#c8c0b8', color: 'var(--charcoal)', background: 'white' }}>
-                  {t('home.hero.cta2')}
+                  {t('nav.collections')} <ArrowRight size={16} />
                 </button>
               </Link>
             </div>

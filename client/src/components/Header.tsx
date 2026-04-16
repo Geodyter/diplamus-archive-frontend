@@ -31,7 +31,6 @@ export default function Header() {
     { href: '/', label: t('nav.home') },
     { href: '/explore', label: t('nav.explore') },
     { href: '/collections', label: t('nav.collections') },
-    { href: '/tours', label: t('nav.tours') },
     { href: '/halls', label: t('nav.halls') },
   ];
 
@@ -59,18 +58,12 @@ export default function Header() {
         <div className="container">
           <div className="flex items-center justify-between h-16 md:h-18">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-8 h-8 rounded-sm flex items-center justify-center" style={{ background: 'var(--terracotta)' }}>
-                <span className="text-white font-display font-bold text-sm">D</span>
-              </div>
-              <div className="hidden sm:block">
-                <div className="font-display font-semibold text-lg leading-tight" style={{ color: 'var(--charcoal)' }}>
-                  DiPlaMus
-                </div>
-                <div className="text-xs font-body tracking-widest uppercase" style={{ color: 'var(--terracotta)', letterSpacing: '0.12em' }}>
-                  Archive
-                </div>
-              </div>
+            <Link href="/" className="flex items-center gap-2 group">
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/diplamus-logo-official_b35ca23f.png"
+                alt="DiPlaMus Archive"
+                className="h-9 w-auto object-contain"
+              />
             </Link>
 
             {/* Desktop Navigation */}

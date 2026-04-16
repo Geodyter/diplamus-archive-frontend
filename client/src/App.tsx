@@ -10,7 +10,6 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
 import ExhibitDetail from "./pages/ExhibitDetail";
-import Tours from "./pages/Tours";
 import Halls from "./pages/Halls";
 import Collections from "./pages/Collections";
 function Router() {
@@ -23,7 +22,6 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/explore" component={Explore} />
           <Route path="/exhibit/:id" component={ExhibitDetail} />
-          <Route path="/tours" component={Tours} />
           <Route path="/halls" component={Halls} />
           <Route path="/collections" component={Collections} />
           <Route path="/404" component={NotFound} />

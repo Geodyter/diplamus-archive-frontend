@@ -3,7 +3,7 @@
  * Design: Contemporary Museum Digital
  * Features: Faceted search, grid/list view, pagination, sort
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Search, Grid3X3, List, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
 import { api, NavigationPoint, Material, Period, Place, Usage, getTranslation } from '@/lib/api';
@@ -15,8 +15,14 @@ export default function Explore() {
   const { lang, t } = useLanguage();
   const [location] = useLocation();
 
-  // Parse URL params
-  const params = new URLSearchParams(location.includes('?') ? location.split('?')[1] : '');
+  // Parse URL params — use window.location.search for the full query string
+  // (wouter's useLocation only returns the pathname, not the query string)
+  const params = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search);
+    }
+    return new URLSearchParams(location.includes('?') ? location.split('?')[1] : '');
+  }, [location]);
   const initialQuery = params.get('q') || '';
   const initialMaterial = params.get('material') || '';
   const initialPeriod = params.get('period') || '';

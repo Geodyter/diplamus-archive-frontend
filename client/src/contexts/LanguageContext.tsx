@@ -14,7 +14,6 @@ const el: Translations = {
   'nav.home': 'Αρχική',
   'nav.explore': 'Εξερεύνηση',
   'nav.collections': 'Συλλογές',
-  'nav.tours': 'Περιηγήσεις',
   'nav.halls': 'Αίθουσες',
   'nav.about': 'Σχετικά',
 
@@ -23,7 +22,6 @@ const el: Translations = {
   'home.hero.subtitle': 'Τεκμηρίωση Μουσειακών Εκθεμάτων',
   'home.hero.description': 'Εξερευνήστε τη συλλογή μας από εκθέματα, φωτογραφίες, βίντεο και τρισδιάστατα αντικείμενα με βάση το πρότυπο CIDOC-CRM.',
   'home.hero.cta': 'Εξερεύνηση Συλλογής',
-  'home.hero.cta2': 'Περιηγήσεις',
   'home.stats.exhibits': 'Εκθέματα',
   'home.stats.collections': 'Συλλογές',
   'home.stats.places': 'Τοποθεσίες',
@@ -79,14 +77,6 @@ const el: Translations = {
   'exhibit.view3d': 'Προβολή 3D',
   'exhibit.download': 'Λήψη',
 
-  // Tours
-  'tours.title': 'Εικονικές Περιηγήσεις',
-  'tours.subtitle': 'Ξεναγηθείτε στις συλλογές του μουσείου',
-  'tours.empty': 'Δεν υπάρχουν διαθέσιμες περιηγήσεις ακόμα',
-  'tours.halls': 'Αίθουσες',
-  'tours.exhibits': 'Εκθέματα',
-  'tours.start': 'Έναρξη Περιήγησης',
-
   // Halls
   'halls.title': 'Αίθουσες Μουσείου',
   'halls.subtitle': 'Εξερευνήστε τις αίθουσες και τα εκθέματά τους',
@@ -119,7 +109,6 @@ const en: Translations = {
   'nav.home': 'Home',
   'nav.explore': 'Explore',
   'nav.collections': 'Collections',
-  'nav.tours': 'Tours',
   'nav.halls': 'Halls',
   'nav.about': 'About',
 
@@ -128,7 +117,6 @@ const en: Translations = {
   'home.hero.subtitle': 'Museum Exhibit Documentation',
   'home.hero.description': 'Explore our collection of exhibits, photographs, videos and 3D objects based on the CIDOC-CRM standard.',
   'home.hero.cta': 'Explore Collection',
-  'home.hero.cta2': 'Virtual Tours',
   'home.stats.exhibits': 'Exhibits',
   'home.stats.collections': 'Collections',
   'home.stats.places': 'Places',
@@ -183,14 +171,6 @@ const en: Translations = {
   'exhibit.related': 'Related Exhibits',
   'exhibit.view3d': 'View 3D',
   'exhibit.download': 'Download',
-
-  // Tours
-  'tours.title': 'Virtual Tours',
-  'tours.subtitle': 'Take a guided tour of the museum collections',
-  'tours.empty': 'No tours available yet',
-  'tours.halls': 'Halls',
-  'tours.exhibits': 'Exhibits',
-  'tours.start': 'Start Tour',
 
   // Halls
   'halls.title': 'Museum Halls',

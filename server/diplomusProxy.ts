@@ -8,6 +8,7 @@
  *   /diplamus-storage/*    →  https://archive.diplamus.app-host.eu/storage/*
  */
 import type { Express, Request, Response } from "express";
+import { Readable } from "stream";
 
 const DIPLAMUS_BASE = "https://archive.diplamus.app-host.eu/api/v1";
 const DIPLAMUS_STORAGE = "https://archive.diplamus.app-host.eu/storage";
@@ -47,42 +48,59 @@ export function registerDiplamousProxy(app: Express) {
     }
   });
 
-  // ── Storage proxy (for GLB, images, videos) ──
+  // ── Storage proxy (for GLB, images, videos) with streaming + Range support ──
   app.use("/diplamus-storage", async (req: Request, res: Response) => {
     const targetPath = req.path;
     const targetUrl = `${DIPLAMUS_STORAGE}${targetPath}`;
 
+    // Forward Range header for partial content (needed for model-viewer / large files)
+    const upstreamHeaders: Record<string, string> = {
+      "X-API-Authorization": API_KEY,
+    };
+    if (req.headers.range) {
+      upstreamHeaders["Range"] = req.headers.range;
+    }
+
     try {
       const upstream = await fetch(targetUrl, {
         method: "GET",
-        headers: {
-          "X-API-Authorization": API_KEY,
-        },
+        headers: upstreamHeaders,
       });
 
-      if (!upstream.ok) {
+      if (!upstream.ok && upstream.status !== 206) {
         res.status(upstream.status).send("Not found");
         return;
       }
 
       const contentType = upstream.headers.get("content-type") || "application/octet-stream";
       const contentLength = upstream.headers.get("content-length");
+      const contentRange = upstream.headers.get("content-range");
+      const acceptRanges = upstream.headers.get("accept-ranges");
 
-      res.status(200)
+      res.status(upstream.status)
         .set("Content-Type", contentType)
         .set("Access-Control-Allow-Origin", "*")
         .set("Cache-Control", "public, max-age=3600");
 
-      if (contentLength) {
-        res.set("Content-Length", contentLength);
-      }
+      if (contentLength) res.set("Content-Length", contentLength);
+      if (contentRange) res.set("Content-Range", contentRange);
+      if (acceptRanges) res.set("Accept-Ranges", acceptRanges);
+      else res.set("Accept-Ranges", "bytes");
 
-      // Stream the response
-      const buffer = await upstream.arrayBuffer();
-      res.send(Buffer.from(buffer));
+      // Stream directly to response (no buffering in memory)
+      if (upstream.body) {
+        const nodeStream = Readable.fromWeb(upstream.body as import("stream/web").ReadableStream);
+        nodeStream.pipe(res);
+        nodeStream.on("error", (err) => {
+          console.error("[DiPlaMus Storage Proxy] Stream error:", err);
+          if (!res.headersSent) res.status(502).send("Stream error");
+        });
+      } else {
+        res.end();
+      }
     } catch (err) {
       console.error("[DiPlaMus Storage Proxy] Error:", err);
-      res.status(502).send("Storage proxy error");
+      if (!res.headersSent) res.status(502).send("Storage proxy error");
     }
   });
 }
