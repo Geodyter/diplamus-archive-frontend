@@ -239,8 +239,9 @@ export const api = {
 
 // ---- Helpers ----
 
-export function getTranslation(translations: Translation[], langCode: string): Translation | undefined {
-  return translations?.find(t => t.languageCode === langCode) || translations?.[0];
+export function getTranslation(translations: Translation[] | null | undefined, langCode: string): Translation | undefined {
+  const arr = Array.isArray(translations) ? translations : [];
+  return arr.find(t => t.languageCode === langCode) || arr[0];
 }
 
 /**
@@ -297,6 +298,7 @@ export function getFileThumbnail(file: MediaFile): string | null {
 /** Get the display name of a taxonomy item in the given language */
 export function getTaxonomyName(item: TaxonomyItem | null | undefined, langCode: string): string {
   if (!item) return '—';
-  const tr = getTranslation(item.translations || [], langCode);
+  const translations = Array.isArray(item.translations) ? item.translations : [];
+  const tr = getTranslation(translations, langCode);
   return tr?.name || item.name || '—';
 }

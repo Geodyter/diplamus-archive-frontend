@@ -31,7 +31,6 @@ export default function Header() {
     { href: '/', label: t('nav.home') },
     { href: '/explore', label: t('nav.explore') },
     { href: '/collections', label: t('nav.collections') },
-    { href: '/halls', label: t('nav.halls') },
   ];
 
   const isActive = (href: string) => {

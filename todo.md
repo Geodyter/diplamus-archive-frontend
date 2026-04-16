@@ -24,3 +24,9 @@
 - [x] Φίλτρα Εξερεύνησης — server-side filtering με period_id, material_id, place_id, usage_id (υποστηρίζεται πλέον από το API)
 - [x] Αφαίρεση "Αίθουσα" από τα φίλτρα — δεν υπάρχει πλέον στο sidebar
 - [x] Εμφάνιση συλλογής (period) στις κάρτες εκθεμάτων στη λίστα
+
+## Διορθώσεις (2026-04-16 #3)
+- [x] Διόρθωση crash "lt.map is not a function" — null-safe getTranslation/getTaxonomyName σε api.ts
+- [x] Αντικατάσταση φίλτρου "Τοποθεσία" με "Κατηγορία" (placeholder "Σύντομα διαθέσιμο" — endpoint δεν υπάρχει ακόμα)
+- [x] Αντικατάσταση φίλτρου "Χρήση" με "Είδος αντικειμένου" (placeholder "Σύντομα διαθέσιμο" — endpoint δεν υπάρχει ακόμα)
+- [x] Αφαίρεση "Αίθουσες" από Header και Footer navigation

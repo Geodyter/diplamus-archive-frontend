@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Search, Grid3X3, List, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
-import { api, NavigationPoint, Material, Period, Place, Usage, getTranslation } from '@/lib/api';
+import { api, NavigationPoint, Material, Period, getTranslation } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ExhibitCard from '@/components/ExhibitCard';
 import { LoadingSpinner, ErrorState, EmptyState, PageHeader, Pagination } from '@/components/LoadingState';
@@ -16,7 +16,6 @@ export default function Explore() {
   const [location] = useLocation();
 
   // Parse URL params — use window.location.search for the full query string
-  // (wouter's useLocation only returns the pathname, not the query string)
   const params = useMemo(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search);
@@ -27,8 +26,6 @@ export default function Explore() {
   const initialQuery = params.get('q') || '';
   const initialMaterial = params.get('material') || '';
   const initialPeriod = params.get('period') || '';
-  const initialPlace = params.get('place') || '';
-  const initialUsage = params.get('usage') || '';
 
   // State
   const [query, setQuery] = useState(initialQuery);
@@ -38,8 +35,6 @@ export default function Explore() {
   const [page, setPage] = useState(1);
   const [filterMaterial, setFilterMaterial] = useState(initialMaterial);
   const [filterPeriod, setFilterPeriod] = useState(initialPeriod);
-  const [filterPlace, setFilterPlace] = useState(initialPlace);
-  const [filterUsage, setFilterUsage] = useState(initialUsage);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Data
@@ -52,21 +47,15 @@ export default function Explore() {
   // Taxonomy
   const [materials, setMaterials] = useState<Material[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [usages, setUsages] = useState<Usage[]>([]);
 
-  // Load taxonomy once
+  // Load taxonomy once — safely handle non-array responses
   useEffect(() => {
     Promise.all([
       api.getMaterials({ pageSize: 100 }),
       api.getPeriods({ pageSize: 100 }),
-      api.getPlaces({ pageSize: 100 }),
-      api.getUsages({ pageSize: 100 }),
-    ]).then(([m, p, pl, u]) => {
-      setMaterials(m.data);
-      setPeriods(p.data);
-      setPlaces(pl.data);
-      setUsages(u.data);
+    ]).then(([m, p]) => {
+      setMaterials(Array.isArray(m.data) ? m.data : []);
+      setPeriods(Array.isArray(p.data) ? p.data : []);
     }).catch(console.error);
   }, []);
 
@@ -84,19 +73,17 @@ export default function Explore() {
       if (query) apiParams.content = query;
       if (filterMaterial) apiParams.material_id = filterMaterial;
       if (filterPeriod) apiParams.period_id = filterPeriod;
-      if (filterPlace) apiParams.place_id = filterPlace;
-      if (filterUsage) apiParams.usage_id = filterUsage;
 
       const res = await api.getNavigationPoints(apiParams as any);
-      setExhibits(res.data);
-      setTotalPages(res.meta.last_page);
-      setTotalItems(res.meta.total);
+      setExhibits(Array.isArray(res.data) ? res.data : []);
+      setTotalPages(res.meta?.last_page ?? 1);
+      setTotalItems(res.meta?.total ?? 0);
     } catch (err) {
       setError(t('common.error'));
     } finally {
       setLoading(false);
     }
-  }, [page, query, sort, filterMaterial, filterPeriod, filterPlace, filterUsage, t]);
+  }, [page, query, sort, filterMaterial, filterPeriod, t]);
 
   useEffect(() => {
     loadExhibits();
@@ -111,14 +98,20 @@ export default function Explore() {
   const clearFilters = () => {
     setFilterMaterial('');
     setFilterPeriod('');
-    setFilterPlace('');
-    setFilterUsage('');
     setQuery('');
     setInputValue('');
     setPage(1);
   };
 
-  const hasActiveFilters = filterMaterial || filterPeriod || filterPlace || filterUsage || query;
+  const hasActiveFilters = filterMaterial || filterPeriod || query;
+
+  // Safe helper: get taxonomy name without crashing if translations is not an array
+  const safeName = (item: { translations?: any[]; name?: string } | undefined, langCode: string): string => {
+    if (!item) return '';
+    const translations = Array.isArray(item.translations) ? item.translations : [];
+    const tr = getTranslation(translations, langCode);
+    return tr?.name || item.name || '';
+  };
 
   const FilterPanel = () => (
     <div className="space-y-6">
@@ -138,7 +131,7 @@ export default function Explore() {
       {periods.length > 0 && (
         <FilterGroup
           label={t('explore.filters.collection')}
-          options={periods.map(p => ({ value: String(p.id), label: getTranslation(p.translations, lang)?.name || p.name }))}
+          options={periods.map(p => ({ value: String(p.id), label: safeName(p, lang) || p.name }))}
           value={filterPeriod}
           onChange={v => { setFilterPeriod(v); setPage(1); }}
         />
@@ -148,31 +141,17 @@ export default function Explore() {
       {materials.length > 0 && (
         <FilterGroup
           label={t('explore.filters.material')}
-          options={materials.map(m => ({ value: String(m.id), label: getTranslation(m.translations, lang)?.name || m.name }))}
+          options={materials.map(m => ({ value: String(m.id), label: safeName(m, lang) || m.name }))}
           value={filterMaterial}
           onChange={v => { setFilterMaterial(v); setPage(1); }}
         />
       )}
 
-      {/* Places / Τοποθεσία */}
-      {places.length > 0 && (
-        <FilterGroup
-          label={t('explore.filters.place')}
-          options={places.map(p => ({ value: String(p.id), label: getTranslation(p.translations, lang)?.name || p.name }))}
-          value={filterPlace}
-          onChange={v => { setFilterPlace(v); setPage(1); }}
-        />
-      )}
+      {/* Κατηγορία — placeholder (endpoint pending from developer) */}
+      <FilterGroupPlaceholder label="Κατηγορία" />
 
-      {/* Usages / Τρόπος Απόκτησης */}
-      {usages.length > 0 && (
-        <FilterGroup
-          label={t('explore.filters.usage')}
-          options={usages.map(u => ({ value: String(u.id), label: getTranslation(u.translations, lang)?.name || u.name }))}
-          value={filterUsage}
-          onChange={v => { setFilterUsage(v); setPage(1); }}
-        />
-      )}
+      {/* Είδος αντικειμένου — placeholder (endpoint pending from developer) */}
+      <FilterGroupPlaceholder label="Είδος αντικειμένου" />
     </div>
   );
 
@@ -276,30 +255,21 @@ export default function Explore() {
             {hasActiveFilters && (
               <div className="flex flex-wrap gap-2 mb-5">
                 {query && (
-                  <FilterChip label={`"${query}"`} onRemove={() => { setQuery(''); setInputValue(''); setPage(1); }} />
+                  <FilterChip
+                    label={`"${query}"`}
+                    onRemove={() => { setQuery(''); setInputValue(''); setPage(1); }}
+                  />
                 )}
                 {filterPeriod && (
                   <FilterChip
-                    label={getTranslation(periods.find(p => String(p.id) === filterPeriod)?.translations || [], lang)?.name || filterPeriod}
+                    label={safeName(periods.find(p => String(p.id) === filterPeriod), lang) || filterPeriod}
                     onRemove={() => { setFilterPeriod(''); setPage(1); }}
                   />
                 )}
                 {filterMaterial && (
                   <FilterChip
-                    label={getTranslation(materials.find(m => String(m.id) === filterMaterial)?.translations || [], lang)?.name || filterMaterial}
+                    label={safeName(materials.find(m => String(m.id) === filterMaterial), lang) || filterMaterial}
                     onRemove={() => { setFilterMaterial(''); setPage(1); }}
-                  />
-                )}
-                {filterPlace && (
-                  <FilterChip
-                    label={getTranslation(places.find(p => String(p.id) === filterPlace)?.translations || [], lang)?.name || filterPlace}
-                    onRemove={() => { setFilterPlace(''); setPage(1); }}
-                  />
-                )}
-                {filterUsage && (
-                  <FilterChip
-                    label={getTranslation(usages.find(u => String(u.id) === filterUsage)?.translations || [], lang)?.name || filterUsage}
-                    onRemove={() => { setFilterUsage(''); setPage(1); }}
                   />
                 )}
               </div>
@@ -383,6 +353,20 @@ function FilterGroup({
           </label>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Placeholder filter group shown while the API endpoint is pending */
+function FilterGroupPlaceholder({ label }: { label: string }) {
+  return (
+    <div>
+      <h4 className="text-xs font-body font-semibold tracking-wider uppercase mb-2" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.1em' }}>
+        {label}
+      </h4>
+      <p className="text-xs font-body italic" style={{ color: '#c0b8b0' }}>
+        Σύντομα διαθέσιμο
+      </p>
     </div>
   );
 }

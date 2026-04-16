@@ -41,7 +41,6 @@ export default function Footer() {
                   { href: '/', label: t('nav.home') },
                   { href: '/explore', label: t('nav.explore') },
                   { href: '/collections', label: t('nav.collections') },
-                  { href: '/halls', label: t('nav.halls') },
                 ].map(link => (
                   <li key={link.href}>
                     <Link
