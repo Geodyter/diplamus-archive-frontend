@@ -16,22 +16,23 @@ export default function Home() {
   const { lang, t } = useLanguage();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [stats, setStats] = useState({ materials: 0, periods: 0, places: 0 });
+  const [stats, setStats] = useState({ materials: 0, periods: 0, exhibits: 0, categories: 13 });
 
   useEffect(() => {
     async function load() {
       try {
-        const [mats, pers, places] = await Promise.all([
+        const [mats, pers, exhibitsRes] = await Promise.all([
           api.getMaterials({ pageSize: 12 }),
           api.getPeriods({ pageSize: 6 }),
-          api.getPlaces({ pageSize: 1 }),
+          api.getNavigationPoints({ pageSize: 1, send_ops: 1 }),
         ]);
         setMaterials(mats.data);
         setPeriods(pers.data);
         setStats({
           materials: mats.meta.total,
           periods: pers.meta.total,
-          places: places.meta.total,
+          exhibits: exhibitsRes.meta.total,
+          categories: 13, // fixed until API provides endpoint
         });
       } catch (err) {
         console.error('Home load error:', err);
@@ -85,9 +86,9 @@ export default function Home() {
         <div className="container py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-0 md:divide-x divide-[#e8e0d8]">
             {[
-              { icon: <BookOpen size={20} />, value: stats.periods || '—', label: t('home.stats.collections') },
-              { icon: <ImageIcon size={20} />, value: '—', label: t('home.stats.exhibits') },
-              { icon: <MapPin size={20} />, value: stats.places || '—', label: t('home.stats.places') },
+              { icon: <BookOpen size={20} />, value: stats.exhibits || '—', label: t('home.stats.exhibits') },
+              { icon: <ImageIcon size={20} />, value: stats.periods || '—', label: t('home.stats.collections') },
+              { icon: <MapPin size={20} />, value: stats.categories, label: 'Κατηγορίες' },
               { icon: <Box size={20} />, value: stats.materials || '—', label: t('home.stats.materials') },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center md:items-start gap-1 md:px-8 first:pl-0">

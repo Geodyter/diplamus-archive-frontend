@@ -16,6 +16,7 @@ export default function Explore() {
   const [location] = useLocation();
 
   // Parse URL params — use window.location.search for the full query string
+  // Note: Collections page links to /explore?period=X (period ID)
   const params = useMemo(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search);
@@ -25,7 +26,8 @@ export default function Explore() {
 
   const initialQuery = params.get('q') || '';
   const initialMaterial = params.get('material') || '';
-  const initialPeriod = params.get('period') || '';
+  // Collections page passes ?period=X — this maps directly to period_id filter
+  const initialPeriod = params.get('period') || params.get('period_id') || '';
 
   // State
   const [query, setQuery] = useState(initialQuery);
