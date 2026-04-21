@@ -142,6 +142,22 @@ export type Usage = TaxonomyItem;
 export type ReservationStatus = TaxonomyItem;
 
 /**
+ * NavigationPointCategory — hierarchical category from /navigation_point_categories
+ * Top-level categories have children (subcategories / "Είδος αντικειμένου")
+ */
+export interface NavigationPointCategory {
+  id: number;
+  name: string;
+  image: ImageAsset;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  translations: Translation[];
+  children?: NavigationPointCategory[];
+  parent?: NavigationPointCategory | null;
+}
+
+/**
  * NavigationPoint — actual API response shape from navigation_points/:id
  */
 export interface NavigationPoint {
@@ -202,11 +218,16 @@ export interface ListParams {
   content?: string;
   sort?: string;
   send_ops?: number;
-  // Filter params (now supported by API)
+  // Filter params
   period_id?: number | string;
+  /** Single material filter (exact match) */
   material_id?: number | string;
+  /** Multi-material filter: comma-separated IDs e.g. "1,2,3" */
+  materials?: string;
   place_id?: number | string;
   usage_id?: number | string;
+  /** Filter by category (top-level or subcategory) */
+  category_id?: number | string;
 }
 
 export const api = {
@@ -235,6 +256,12 @@ export const api = {
     apiFetch<PaginatedResponse<Usage>>('/usages', params as Record<string, string | number | boolean>),
   getLanguages: () =>
     apiFetch<PaginatedResponse<Language>>('/languages'),
+  /** Get all categories (hierarchical: top-level have children = subcategories) */
+  getCategories: (params?: ListParams) =>
+    apiFetch<PaginatedResponse<NavigationPointCategory>>('/navigation_point_categories', params as Record<string, string | number | boolean>),
+  /** Get a single category with its children */
+  getCategory: (id: number) =>
+    apiFetch<SingleResponse<NavigationPointCategory>>(`/navigation_point_categories/${id}`),
 };
 
 // ---- Helpers ----

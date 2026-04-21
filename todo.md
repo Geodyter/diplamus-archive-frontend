@@ -38,6 +38,12 @@
 - [x] Fix Home stats: αντικατάσταση Τοποθεσίες με Κατηγορίες=13
 
 ## Εκκρεμότητες (αναμένεται developer)
-- [ ] Backend: διόρθωση material_id filtering (επιστρέφει 1 αντικείμενο αντί για όλα με αυτό το υλικό)
-- [ ] Backend: νέα endpoints για Κατηγορία και Είδος αντικειμένου
-- [ ] Μετά τα endpoints: ενεργοποίηση φίλτρων Κατηγορία/Είδος αντικειμένου στο Explore
+- [x] Backend: διόρθωση material_id filtering — λύθηκε με ?materials=1,2 (multi-value endpoint)
+- [x] Backend: νέα endpoints για Κατηγορία και Είδος αντικειμένου — /navigation_point_categories
+
+## Νέα API endpoints (2026-04-21)
+- [x] api.ts: προσθήκη getCategories() με endpoint /navigation_point_categories
+- [x] api.ts: ενημέρωση getNavigationPoints() με ?materials=1,2 (multi-value)
+- [x] Explore: φίλτρο Υλικού με checkboxes (multi-select, ?materials=1,2)
+- [x] Explore: φίλτρο Κατηγορίας (radio, από /navigation_point_categories top-level)
+- [x] Explore: φίλτρο Είδους αντικειμένου (radio, υποκατηγορίες, εμφανίζεται αυτόματα όταν επιλεγεί κατηγορία)

@@ -2,11 +2,12 @@
  * DiPlaMus Archive — Explore/Search Page
  * Design: Contemporary Museum Digital
  * Features: Faceted search (server-side), grid/list view, pagination, sort
+ * Filters: Συλλογή (radio), Υλικό (checkboxes, multi-select), Κατηγορία (radio), Είδος αντικειμένου (radio, depends on Κατηγορία)
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { Search, Grid3X3, List, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
-import { api, NavigationPoint, Material, Period, getTranslation } from '@/lib/api';
+import { Search, Grid3X3, List, SlidersHorizontal, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { api, NavigationPoint, Material, Period, NavigationPointCategory, getTranslation } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ExhibitCard from '@/components/ExhibitCard';
 import { LoadingSpinner, ErrorState, EmptyState, PageHeader, Pagination } from '@/components/LoadingState';
@@ -16,7 +17,6 @@ export default function Explore() {
   const [location] = useLocation();
 
   // Parse URL params — use window.location.search for the full query string
-  // Note: Collections page links to /explore?period=X (period ID)
   const params = useMemo(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search);
@@ -25,8 +25,7 @@ export default function Explore() {
   }, [location]);
 
   const initialQuery = params.get('q') || '';
-  const initialMaterial = params.get('material') || '';
-  // Collections page passes ?period=X — this maps directly to period_id filter
+  // Collections page passes ?period=X — maps to period_id filter
   const initialPeriod = params.get('period') || params.get('period_id') || '';
 
   // State
@@ -35,8 +34,13 @@ export default function Explore() {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [sort, setSort] = useState('title');
   const [page, setPage] = useState(1);
-  const [filterMaterial, setFilterMaterial] = useState(initialMaterial);
   const [filterPeriod, setFilterPeriod] = useState(initialPeriod);
+  // Multi-material: set of selected material IDs
+  const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
+  // Category filter: selected top-level category ID
+  const [filterCategory, setFilterCategory] = useState('');
+  // Subcategory (Είδος αντικειμένου): selected child category ID
+  const [filterSubcategory, setFilterSubcategory] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Data
@@ -49,17 +53,34 @@ export default function Explore() {
   // Taxonomy
   const [materials, setMaterials] = useState<Material[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
+  // Categories: full list (top-level items have children = subcategories)
+  const [allCategories, setAllCategories] = useState<NavigationPointCategory[]>([]);
 
-  // Load taxonomy once — safely handle non-array responses
+  // Load taxonomy once
   useEffect(() => {
     Promise.all([
       api.getMaterials({ pageSize: 100 }),
       api.getPeriods({ pageSize: 100 }),
-    ]).then(([m, p]) => {
+      api.getCategories({ pageSize: 100 }),
+    ]).then(([m, p, c]) => {
       setMaterials(Array.isArray(m.data) ? m.data : []);
       setPeriods(Array.isArray(p.data) ? p.data : []);
+      setAllCategories(Array.isArray(c.data) ? c.data : []);
     }).catch(console.error);
   }, []);
+
+  // Top-level categories (those with children array)
+  const topLevelCategories = useMemo(
+    () => allCategories.filter(c => c.children && c.children.length > 0),
+    [allCategories]
+  );
+
+  // Subcategories of the selected top-level category
+  const subcategories = useMemo(() => {
+    if (!filterCategory) return [];
+    const parent = topLevelCategories.find(c => String(c.id) === filterCategory);
+    return parent?.children || [];
+  }, [filterCategory, topLevelCategories]);
 
   // Load exhibits with server-side filtering
   const loadExhibits = useCallback(async () => {
@@ -73,8 +94,22 @@ export default function Explore() {
         sort,
       };
       if (query) apiParams.content = query;
-      if (filterMaterial) apiParams.material_id = filterMaterial;
       if (filterPeriod) apiParams.period_id = filterPeriod;
+
+      // Multi-material: use ?materials=1,2,3 if multiple selected, ?material_id=X if single
+      const materialsArr = Array.from(selectedMaterials);
+      if (materialsArr.length === 1) {
+        apiParams.material_id = materialsArr[0];
+      } else if (materialsArr.length > 1) {
+        apiParams.materials = materialsArr.join(',');
+      }
+
+      // Category filter: use subcategory if selected, otherwise top-level category
+      if (filterSubcategory) {
+        apiParams.category_id = filterSubcategory;
+      } else if (filterCategory) {
+        apiParams.category_id = filterCategory;
+      }
 
       const res = await api.getNavigationPoints(apiParams as any);
       setExhibits(Array.isArray(res.data) ? res.data : []);
@@ -85,7 +120,7 @@ export default function Explore() {
     } finally {
       setLoading(false);
     }
-  }, [page, query, sort, filterMaterial, filterPeriod, t]);
+  }, [page, query, sort, filterPeriod, selectedMaterials, filterCategory, filterSubcategory, t]);
 
   useEffect(() => {
     loadExhibits();
@@ -98,14 +133,32 @@ export default function Explore() {
   };
 
   const clearFilters = () => {
-    setFilterMaterial('');
+    setSelectedMaterials(new Set());
     setFilterPeriod('');
+    setFilterCategory('');
+    setFilterSubcategory('');
     setQuery('');
     setInputValue('');
     setPage(1);
   };
 
-  const hasActiveFilters = filterMaterial || filterPeriod || query;
+  const toggleMaterial = (id: string) => {
+    setSelectedMaterials(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setPage(1);
+  };
+
+  const handleCategoryChange = (id: string) => {
+    setFilterCategory(id);
+    setFilterSubcategory(''); // reset subcategory when top-level changes
+    setPage(1);
+  };
+
+  const hasActiveFilters = selectedMaterials.size > 0 || filterPeriod || filterCategory || filterSubcategory || query;
 
   // Safe helper: get taxonomy name without crashing if translations is not an array
   const safeName = (item: { translations?: any[]; name?: string } | undefined, langCode: string): string => {
@@ -129,9 +182,9 @@ export default function Explore() {
         </button>
       )}
 
-      {/* Collections / Periods */}
+      {/* Collections / Periods — radio */}
       {periods.length > 0 && (
-        <FilterGroup
+        <FilterGroupRadio
           label={t('explore.filters.collection')}
           options={periods.map(p => ({ value: String(p.id), label: safeName(p, lang) || p.name }))}
           value={filterPeriod}
@@ -139,21 +192,48 @@ export default function Explore() {
         />
       )}
 
-      {/* Materials */}
+      {/* Materials — checkboxes (multi-select) */}
       {materials.length > 0 && (
-        <FilterGroup
+        <FilterGroupCheckbox
           label={t('explore.filters.material')}
           options={materials.map(m => ({ value: String(m.id), label: safeName(m, lang) || m.name }))}
-          value={filterMaterial}
-          onChange={v => { setFilterMaterial(v); setPage(1); }}
+          selected={selectedMaterials}
+          onToggle={toggleMaterial}
         />
       )}
 
-      {/* Κατηγορία — placeholder (endpoint pending from developer) */}
-      <FilterGroupPlaceholder label="Κατηγορία" />
+      {/* Κατηγορία — radio (top-level categories) */}
+      {topLevelCategories.length > 0 && (
+        <FilterGroupRadio
+          label="Κατηγορία"
+          options={topLevelCategories.map(c => ({ value: String(c.id), label: safeName(c, lang) || c.name }))}
+          value={filterCategory}
+          onChange={handleCategoryChange}
+        />
+      )}
 
-      {/* Είδος αντικειμένου — placeholder (endpoint pending from developer) */}
-      <FilterGroupPlaceholder label="Είδος αντικειμένου" />
+      {/* Είδος αντικειμένου — radio (subcategories of selected category) */}
+      {filterCategory && subcategories.length > 0 && (
+        <FilterGroupRadio
+          label="Είδος αντικειμένου"
+          options={subcategories.map(c => ({ value: String(c.id), label: safeName(c, lang) || c.name }))}
+          value={filterSubcategory}
+          onChange={v => { setFilterSubcategory(v); setPage(1); }}
+          indent
+        />
+      )}
+
+      {/* Placeholder when category selected but no subcategories */}
+      {filterCategory && subcategories.length === 0 && (
+        <div>
+          <h4 className="text-xs font-body font-semibold tracking-wider uppercase mb-2" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.1em' }}>
+            Είδος αντικειμένου
+          </h4>
+          <p className="text-xs font-body italic" style={{ color: '#c0b8b0' }}>
+            Δεν υπάρχουν υποκατηγορίες
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -268,10 +348,23 @@ export default function Explore() {
                     onRemove={() => { setFilterPeriod(''); setPage(1); }}
                   />
                 )}
-                {filterMaterial && (
+                {Array.from(selectedMaterials).map(id => (
                   <FilterChip
-                    label={safeName(materials.find(m => String(m.id) === filterMaterial), lang) || filterMaterial}
-                    onRemove={() => { setFilterMaterial(''); setPage(1); }}
+                    key={id}
+                    label={safeName(materials.find(m => String(m.id) === id), lang) || id}
+                    onRemove={() => toggleMaterial(id)}
+                  />
+                ))}
+                {filterSubcategory && (
+                  <FilterChip
+                    label={safeName(subcategories.find(c => String(c.id) === filterSubcategory), lang) || filterSubcategory}
+                    onRemove={() => { setFilterSubcategory(''); setPage(1); }}
+                  />
+                )}
+                {filterCategory && !filterSubcategory && (
+                  <FilterChip
+                    label={safeName(topLevelCategories.find(c => String(c.id) === filterCategory), lang) || filterCategory}
+                    onRemove={() => { setFilterCategory(''); setFilterSubcategory(''); setPage(1); }}
                   />
                 )}
               </div>
@@ -309,20 +402,24 @@ export default function Explore() {
 
 // ── Sub-components ──
 
-function FilterGroup({
+/** Radio-button filter group (single selection) */
+function FilterGroupRadio({
   label,
   options,
   value,
   onChange,
+  indent = false,
 }: {
   label: string;
   options: { value: string; label: string }[];
   value: string;
   onChange: (v: string) => void;
+  indent?: boolean;
 }) {
   return (
-    <div>
+    <div className={indent ? 'pl-3 border-l-2 border-[#e8e0d8]' : ''}>
       <h4 className="text-xs font-body font-semibold tracking-wider uppercase mb-2" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.1em' }}>
+        {indent && <ChevronRight size={12} className="inline mr-1 opacity-50" />}
         {label}
       </h4>
       <div className="space-y-1">
@@ -359,16 +456,39 @@ function FilterGroup({
   );
 }
 
-/** Placeholder filter group shown while the API endpoint is pending */
-function FilterGroupPlaceholder({ label }: { label: string }) {
+/** Checkbox filter group (multi-selection) */
+function FilterGroupCheckbox({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  selected: Set<string>;
+  onToggle: (v: string) => void;
+}) {
   return (
     <div>
       <h4 className="text-xs font-body font-semibold tracking-wider uppercase mb-2" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.1em' }}>
         {label}
       </h4>
-      <p className="text-xs font-body italic" style={{ color: '#c0b8b0' }}>
-        Σύντομα διαθέσιμο
-      </p>
+      <div className="space-y-1">
+        {options.map(opt => (
+          <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              value={opt.value}
+              checked={selected.has(opt.value)}
+              onChange={() => onToggle(opt.value)}
+              className="accent-[#B5533C] rounded"
+            />
+            <span className="text-sm font-body group-hover:text-[#B5533C] transition-colors" style={{ color: selected.has(opt.value) ? 'var(--terracotta)' : 'var(--charcoal)' }}>
+              {opt.label}
+            </span>
+          </label>
+        ))}
+      </div>
     </div>
   );
 }
