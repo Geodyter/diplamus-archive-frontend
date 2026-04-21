@@ -20,22 +20,31 @@ export default function Home() {
 
   useEffect(() => {
     async function load() {
-      try {
-        const [mats, pers, exhibitsRes] = await Promise.all([
-          api.getMaterials({ pageSize: 12 }),
-          api.getPeriods({ pageSize: 6 }),
-          api.getNavigationPoints({ pageSize: 1, send_ops: 1 }),
-        ]);
-        setMaterials(mats.data);
-        setPeriods(pers.data);
-        setStats({
-          materials: mats.meta.total,
-          periods: pers.meta.total,
-          exhibits: exhibitsRes.meta.total,
-          categories: 13, // fixed until API provides endpoint
-        });
-      } catch (err) {
-        console.error('Home load error:', err);
+      // Use allSettled so a single 502/timeout doesn't crash the whole page
+      const [matsResult, persResult, exhibitsResult] = await Promise.allSettled([
+        api.getMaterials({ pageSize: 12 }),
+        api.getPeriods({ pageSize: 6 }),
+        api.getNavigationPoints({ pageSize: 1, send_ops: 1 }),
+      ]);
+
+      if (matsResult.status === 'fulfilled') {
+        setMaterials(matsResult.value.data);
+        setStats(prev => ({ ...prev, materials: matsResult.value.meta.total }));
+      } else {
+        console.warn('Home: materials load failed', matsResult.reason);
+      }
+
+      if (persResult.status === 'fulfilled') {
+        setPeriods(persResult.value.data);
+        setStats(prev => ({ ...prev, periods: persResult.value.meta.total }));
+      } else {
+        console.warn('Home: periods load failed', persResult.reason);
+      }
+
+      if (exhibitsResult.status === 'fulfilled') {
+        setStats(prev => ({ ...prev, exhibits: exhibitsResult.value.meta.total }));
+      } else {
+        console.warn('Home: exhibits count load failed', exhibitsResult.reason);
       }
     }
     load();

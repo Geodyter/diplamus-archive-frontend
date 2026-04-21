@@ -47,3 +47,6 @@
 - [x] Explore: φίλτρο Υλικού με checkboxes (multi-select, ?materials=1,2)
 - [x] Explore: φίλτρο Κατηγορίας (radio, από /navigation_point_categories top-level)
 - [x] Explore: φίλτρο Είδους αντικειμένου (radio, υποκατηγορίες, εμφανίζεται αυτόματα όταν επιλεγεί κατηγορία)
+
+## Διορθώσεις (2026-04-21 #2)
+- [x] Fix Home 502 error: graceful fallback \u03cc\u03c4\u03b1\u03bd \u03c4\u03bf API \u03b5\u03c0\u03b9\u03c3\u03c4\u03c1\u03ad\u03c6\u03b5\u03b9 502 (\u03b5\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 fallback \u03c4\u03b9\u03bc\u03ce\u03bd \u03b1\u03bd\u03c4\u03af \u03b3\u03b9\u03b1 crash)
