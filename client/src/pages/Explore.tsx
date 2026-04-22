@@ -96,11 +96,10 @@ export default function Explore() {
       if (query) apiParams.content = query;
       if (filterPeriod) apiParams.period_id = filterPeriod;
 
-      // Multi-material: use ?materials=1,2,3 if multiple selected, ?material_id=X if single
+      // Multi-material: always use ?materials=X,Y,Z (works for both single and multiple)
+      // NOTE: material_id has a backend bug (returns 0 results), always use materials=
       const materialsArr = Array.from(selectedMaterials);
-      if (materialsArr.length === 1) {
-        apiParams.material_id = materialsArr[0];
-      } else if (materialsArr.length > 1) {
+      if (materialsArr.length > 0) {
         apiParams.materials = materialsArr.join(',');
       }
 
@@ -242,21 +241,21 @@ export default function Explore() {
       <div className="container py-10">
         <PageHeader title={t('explore.title')} subtitle={t('explore.subtitle')} />
 
-        {/* Search bar */}
-        <form onSubmit={handleSearch} className="flex gap-2 mb-8">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a09890]" />
+        {/* Search bar — disabled until backend supports ?content= full-text search */}
+        <form onSubmit={e => e.preventDefault()} className="flex gap-2 mb-8">
+          <div className="relative flex-1" title="Η αναζήτηση κειμένου θα είναι σύντομα διαθέσιμη">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c0b8b0]" />
             <input
               type="text"
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              placeholder={t('explore.search.placeholder')}
-              className="w-full pl-10 pr-4 py-3 text-sm border border-[#e8e0d8] rounded-sm bg-white focus:outline-none focus:border-[#B5533C] font-body transition-colors"
+              disabled
+              placeholder="Αναζήτηση εκθεμάτων... (Σύντομα διαθέσιμο)"
+              className="w-full pl-10 pr-4 py-3 text-sm border border-[#e8e0d8] rounded-sm bg-[#f5f0eb] cursor-not-allowed font-body text-[#c0b8b0]"
             />
           </div>
           <button
-            type="submit"
-            className="px-6 py-3 text-sm font-body font-semibold rounded-sm text-white transition-all hover:opacity-90"
+            type="button"
+            disabled
+            className="px-6 py-3 text-sm font-body font-semibold rounded-sm text-white opacity-40 cursor-not-allowed"
             style={{ background: 'var(--terracotta)' }}
           >
             {t('explore.search.button')}
