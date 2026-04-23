@@ -55,3 +55,10 @@
 - [x] Fix: single material filter να χρησιμοποιεί πάντα ?materials=X (όχι material_id) — διορθώθηκε
 - [x] Test: αναζήτηση κειμένου - ?content= δεν φιλτράρει ακόμα (backend αναμένει υλοποίηση)
 - [x] Fix: αναζήτηση — backend δεν υποστηρίζει ?content= ακόμα, γραμμή αναζήτησης απενεργοποιήθηκε
+
+## Διορθώσεις (2026-04-23)
+- [ ] Fix: Είδος αντικειμένου (subcategory) filter — backend limitation (category_id για child IDs επιστρέφει 0 αποτελέσματα), αναμένεται backend fix
+- [x] Fix: εμφάνιση όλων των υλικών ανά αντικείμενο στις κάρτες Εξερεύνησης (ExhibitCard.tsx — loop through materials[])
+- [x] Fix: εμφάνιση όλων των υλικών στα μεταδεδομένα σελίδας εκθέματος (ExhibitDetail.tsx — badges για κάθε υλικό)
+- [ ] Έλεγχος: υπάρχουν περισσότερες κατηγορίες πέρα από τις 3;
+- [ ] Developer instructions: αναζήτηση κειμένου (?content= endpoint)

@@ -110,7 +110,14 @@ export default function ExhibitDetail() {
   const statusName = getTaxonomyName(exhibit.reservationStatus, lang);
   const primaryLocation = getTaxonomyName(exhibit.firstPlace, lang);
   const secondaryLocation = getTaxonomyName(exhibit.secondPlace, lang);
-  const materialNames = (exhibit.material || exhibit.materials || []).map(m => getTaxonomyName(m, lang)).join(', ');
+  // materials is always an array; material (singular) is a legacy single-object field
+  const materialsArr = Array.isArray(exhibit.materials) && exhibit.materials.length > 0
+    ? exhibit.materials
+    : (exhibit.material && !Array.isArray(exhibit.material) ? [exhibit.material] : []);
+  const materialNames = materialsArr
+    .map((m: any) => getTaxonomyName(m, lang))
+    .filter((n: string | null) => n && n !== '—') as string[];
+  const materialNamesStr = materialNames.join(', ');
 
   return (
     <div className="page-enter min-h-screen" style={{ background: 'var(--cream)' }}>
@@ -237,7 +244,18 @@ export default function ExhibitDetail() {
             {/* Quick meta strip */}
             <div className="grid grid-cols-2 gap-3 mb-5">
               {exhibit.monumentName && <MetaRow label={lang === 'el' ? 'Χρονολογία' : 'Date'} value={exhibit.monumentName} />}
-              {materialNames && <MetaRow label={lang === 'el' ? 'Υλικό' : 'Material'} value={materialNames} />}
+              {materialNames.length > 0 && (
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs font-body font-semibold tracking-wider uppercase" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.08em' }}>
+                    {lang === 'el' ? 'Υλικό' : 'Material'}
+                  </dt>
+                  <dd className="flex flex-wrap gap-1">
+                    {materialNames.map((name, i) => (
+                      <span key={i} className="meta-badge">{name}</span>
+                    ))}
+                  </dd>
+                </div>
+              )}
               {exhibit.registration_number && <MetaRow label={lang === 'el' ? 'Κατασκευαστής' : 'Manufacturer'} value={exhibit.registration_number} />}
               {statusName !== '—' && <MetaRow label={lang === 'el' ? 'Κατάσταση' : 'Condition'} value={statusName} />}
             </div>
@@ -419,7 +437,18 @@ export default function ExhibitDetail() {
                 <MetaBadgeRow label={lang === 'el' ? 'Συλλογή' : 'Collection'} value={collectionName !== '—' ? collectionName : undefined} />
                 <MetaBadgeRow label={lang === 'el' ? 'Τρόπος Απόκτησης' : 'Acquisition'} value={acquisitionName !== '—' ? acquisitionName : undefined} />
                 <MetaBadgeRow label={lang === 'el' ? 'Κατάσταση Διατήρησης' : 'Condition'} value={statusName !== '—' ? statusName : undefined} />
-                {materialNames && <MetaRow label={lang === 'el' ? 'Υλικό' : 'Material'} value={materialNames} />}
+                {materialNames.length > 0 && (
+                  <div className="flex flex-col gap-1">
+                    <dt className="text-xs font-body font-semibold tracking-wider uppercase" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.08em' }}>
+                      {lang === 'el' ? 'Υλικό' : 'Material'}
+                    </dt>
+                    <dd className="flex flex-wrap gap-1">
+                      {materialNames.map((name, i) => (
+                        <span key={i} className="meta-badge">{name}</span>
+                      ))}
+                    </dd>
+                  </div>
+                )}
                 <MetaRow label={lang === 'el' ? 'Πρωτεύουσα Τοποθεσία' : 'Primary Location'} value={primaryLocation !== '—' ? primaryLocation : undefined} />
                 <MetaRow label={lang === 'el' ? 'Δευτερεύουσα Τοποθεσία' : 'Secondary Location'} value={secondaryLocation !== '—' ? secondaryLocation : undefined} />
                 {(exhibit.height || exhibit.width || exhibit.length) && (

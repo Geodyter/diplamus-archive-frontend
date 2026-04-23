@@ -26,9 +26,13 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
   const hasVideo = exhibit.files?.some(f => f.file_category === 'video' || f.file_extension?.match(/^(mp4|webm|mov)$/i));
   const hasImages = exhibit.files?.some(f => f.file_category === 'photo') || exhibit.image?.uri;
 
-  // Material from material array
-  const materialArr = exhibit.material || exhibit.materials || [];
-  const materialName = materialArr.length > 0 ? getTaxonomyName(materialArr[0], lang) : null;
+  // All materials from materials array (each exhibit can have multiple)
+  const materialArr = Array.isArray(exhibit.materials) && exhibit.materials.length > 0
+    ? exhibit.materials
+    : (exhibit.material ? [exhibit.material] : []);
+  const materialNames = materialArr
+    .map((m: any) => getTaxonomyName(m, lang))
+    .filter((n: string | null) => n && n !== '—') as string[];
 
   // Collection from period field (now returned by list endpoint)
   const collectionName = exhibit.period ? getTaxonomyName(exhibit.period, lang) : null;
@@ -54,7 +58,7 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
               <p className="text-sm font-body text-[#6b6560] mt-1 line-clamp-2">{description}</p>
             )}
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {materialName && materialName !== '—' && <span className="meta-badge">{materialName}</span>}
+              {materialNames.map((name, i) => <span key={i} className="meta-badge">{name}</span>)}
               {has3D && <span className="meta-badge flex items-center gap-1"><Box size={10} />3D</span>}
               {hasVideo && <span className="meta-badge flex items-center gap-1"><Video size={10} />Video</span>}
             </div>
@@ -118,7 +122,7 @@ export default function ExhibitCard({ exhibit, view = 'grid' }: ExhibitCardProps
             <p className="text-sm font-body text-[#6b6560] line-clamp-2 mb-3">{description}</p>
           )}
           <div className="flex items-center gap-2 flex-wrap">
-            {materialName && materialName !== '—' && <span className="meta-badge">{materialName}</span>}
+            {materialNames.map((name, i) => <span key={i} className="meta-badge">{name}</span>)}
           </div>
         </div>
       </article>
