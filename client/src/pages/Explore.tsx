@@ -59,9 +59,10 @@ export default function Explore() {
   // Load taxonomy once
   useEffect(() => {
     Promise.all([
-      api.getMaterials({ pageSize: 100 }),
-      api.getPeriods({ pageSize: 100 }),
-      api.getCategories({ pageSize: 100 }),
+      api.getMaterials({ limit: 100 }),
+      api.getPeriods({ limit: 100 }),
+      // Use limit=1000 to get all categories (API uses 'limit', not 'pageSize')
+      api.getCategories({ limit: 1000 }),
     ]).then(([m, p, c]) => {
       setMaterials(Array.isArray(m.data) ? m.data : []);
       setPeriods(Array.isArray(p.data) ? p.data : []);
@@ -103,9 +104,9 @@ export default function Explore() {
         apiParams.materials = materialsArr.join(',');
       }
 
-      // Category filter: use subcategory if selected, otherwise top-level category
+      // Category filter: use sub_category_id for subcategories, category_id for top-level
       if (filterSubcategory) {
-        apiParams.category_id = filterSubcategory;
+        apiParams.sub_category_id = filterSubcategory;
       } else if (filterCategory) {
         apiParams.category_id = filterCategory;
       }
@@ -241,21 +242,22 @@ export default function Explore() {
       <div className="container py-10">
         <PageHeader title={t('explore.title')} subtitle={t('explore.subtitle')} />
 
-        {/* Search bar — disabled until backend supports ?content= full-text search */}
-        <form onSubmit={e => e.preventDefault()} className="flex gap-2 mb-8">
-          <div className="relative flex-1" title="Η αναζήτηση κειμένου θα είναι σύντομα διαθέσιμη">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c0b8b0]" />
+        {/* Search bar — enabled: backend supports ?content= full-text search */}
+        <form onSubmit={handleSearch} className="flex gap-2 mb-8">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a09890]" />
             <input
               type="text"
-              disabled
-              placeholder="Αναζήτηση εκθεμάτων... (Σύντομα διαθέσιμο)"
-              className="w-full pl-10 pr-4 py-3 text-sm border border-[#e8e0d8] rounded-sm bg-[#f5f0eb] cursor-not-allowed font-body text-[#c0b8b0]"
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              placeholder={lang === 'el' ? 'Αναζήτηση εκθεμάτων...' : 'Search exhibits...'}
+              className="w-full pl-10 pr-4 py-3 text-sm border border-[#e8e0d8] rounded-sm bg-white font-body text-[#2C2C2C] focus:outline-none focus:border-[#B5533C] transition-colors"
+              style={{ color: 'var(--charcoal)' }}
             />
           </div>
           <button
-            type="button"
-            disabled
-            className="px-6 py-3 text-sm font-body font-semibold rounded-sm text-white opacity-40 cursor-not-allowed"
+            type="submit"
+            className="px-6 py-3 text-sm font-body font-semibold rounded-sm text-white transition-opacity hover:opacity-90"
             style={{ background: 'var(--terracotta)' }}
           >
             {t('explore.search.button')}

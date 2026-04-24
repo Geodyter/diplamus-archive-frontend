@@ -57,8 +57,8 @@
 - [x] Fix: αναζήτηση — backend δεν υποστηρίζει ?content= ακόμα, γραμμή αναζήτησης απενεργοποιήθηκε
 
 ## Διορθώσεις (2026-04-23)
-- [ ] Fix: Είδος αντικειμένου (subcategory) filter — backend limitation (category_id για child IDs επιστρέφει 0 αποτελέσματα), αναμένεται backend fix
+- [x] Fix: Είδος αντικειμένου (subcategory) filter — διορθώθηκε: χρήση sub_category_id αντί category_id για subcategories (Explore.tsx)
 - [x] Fix: εμφάνιση όλων των υλικών ανά αντικείμενο στις κάρτες Εξερεύνησης (ExhibitCard.tsx — loop through materials[])
 - [x] Fix: εμφάνιση όλων των υλικών στα μεταδεδομένα σελίδας εκθέματος (ExhibitDetail.tsx — badges για κάθε υλικό)
-- [ ] Έλεγχος: υπάρχουν περισσότερες κατηγορίες πέρα από τις 3;
-- [ ] Developer instructions: αναζήτηση κειμένου (?content= endpoint)
+- [x] Έλεγχος: υπάρχουν περισσότερες κατηγορίες πέρα από τις 3; — Επιβεβαιώθηκε: 13 top-level κατηγορίες με limit=1000 (API αγνοούσε pageSize, τώρα χρησιμοποιεί limit=)
+- [x] Developer instructions: αναζήτηση κειμένου (?content= endpoint) — ενεργοποιήθηκε η search bar, content= λειτουργεί σωστά

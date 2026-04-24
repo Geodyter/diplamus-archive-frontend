@@ -215,6 +215,9 @@ export interface Language {
 export interface ListParams {
   page?: number;
   pageSize?: number;
+  /** API uses 'limit' for navigation_point_categories and other endpoints */
+  limit?: number;
+  /** Full-text search on title, text & point_narration */
   content?: string;
   sort?: string;
   send_ops?: number;
@@ -226,8 +229,10 @@ export interface ListParams {
   materials?: string;
   place_id?: number | string;
   usage_id?: number | string;
-  /** Filter by category (top-level or subcategory) */
+  /** Filter by top-level category */
   category_id?: number | string;
+  /** Filter by subcategory (child of category) */
+  sub_category_id?: number | string;
 }
 
 export const api = {
