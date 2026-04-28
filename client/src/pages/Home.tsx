@@ -1,7 +1,7 @@
 /**
  * DiPlaMus Archive — Home Page
  * Design: Contemporary Museum Digital
- * Sections: Hero, Stats, Collections, Materials, 3D Feature
+ * Sections: Hero, Stats, Collections, Materials
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
@@ -10,7 +10,32 @@ import { api, Material, Period, getTranslation, getImageUrl } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const HERO_IMAGE = 'https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/hero-archive-c6kQCwMZzz2XQ7xKyyaXPK.webp';
-const HERO_3D = 'https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/hero-3d-HnnnYMCESBpMcLUmx9S8f3.webp';
+
+/**
+ * Fetch all pages of a paginated endpoint and return combined data array.
+ * The API returns 10 items per page regardless of limit parameter.
+ */
+async function fetchAllPages<T>(
+  fetcher: (page: number) => Promise<{ data: T[]; meta: { last_page: number; total: number } }>
+): Promise<{ data: T[]; total: number }> {
+  const first = await fetcher(1);
+  const lastPage = first.meta?.last_page ?? 1;
+  const total = first.meta?.total ?? first.data.length;
+
+  if (lastPage <= 1) {
+    return { data: first.data, total };
+  }
+
+  // Fetch remaining pages in parallel
+  const rest = await Promise.all(
+    Array.from({ length: lastPage - 1 }, (_, i) => fetcher(i + 2))
+  );
+
+  return {
+    data: [...first.data, ...rest.flatMap(r => r.data)],
+    total,
+  };
+}
 
 export default function Home() {
   const { lang, t } = useLanguage();
@@ -22,14 +47,15 @@ export default function Home() {
     async function load() {
       // Use allSettled so a single 502/timeout doesn't crash the whole page
       const [matsResult, persResult, exhibitsResult] = await Promise.allSettled([
-        api.getMaterials({ pageSize: 12 }),
-        api.getPeriods({ pageSize: 6 }),
-        api.getNavigationPoints({ pageSize: 1, send_ops: 1 }),
+        // Fetch ALL materials across all pages (API returns 10 per page)
+        fetchAllPages(page => api.getMaterials({ page } as any)),
+        api.getPeriods({ limit: 100 }),
+        api.getNavigationPoints({ limit: 1, send_ops: 1 } as any),
       ]);
 
       if (matsResult.status === 'fulfilled') {
         setMaterials(matsResult.value.data);
-        setStats(prev => ({ ...prev, materials: matsResult.value.meta.total }));
+        setStats(prev => ({ ...prev, materials: matsResult.value.total }));
       } else {
         console.warn('Home: materials load failed', matsResult.reason);
       }
@@ -166,6 +192,11 @@ export default function Home() {
                 <h2 className="font-display font-semibold text-2xl md:text-3xl" style={{ color: 'var(--charcoal)' }}>{t('home.materials.title')}</h2>
                 <p className="mt-1 text-sm font-body" style={{ color: 'var(--muted-foreground)' }}>{t('home.materials.subtitle')}</p>
               </div>
+              <Link href="/explore">
+                <span className="text-sm font-body font-medium flex items-center gap-1 hover:gap-2 transition-all" style={{ color: 'var(--terracotta)' }}>
+                  {t('common.view_all')} <ArrowRight size={14} />
+                </span>
+              </Link>
             </div>
             <div className="flex flex-wrap gap-2 card-stagger">
               {materials.map(mat => {
@@ -182,34 +213,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      {/* ── 3D FEATURE BANNER ── */}
-      <section className="py-16 md:py-20" style={{ background: 'var(--charcoal)' }}>
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-px w-8" style={{ background: 'var(--terracotta)' }} />
-                <span className="text-xs font-body font-semibold tracking-widest uppercase" style={{ color: 'var(--terracotta)', letterSpacing: '0.14em' }}>3D Documentation</span>
-              </div>
-              <h2 className="font-display font-semibold text-2xl md:text-3xl text-white mb-4">{t('home.3d.title')}</h2>
-              <p className="text-base font-body mb-8 leading-relaxed" style={{ color: '#a09890' }}>{t('home.3d.description')}</p>
-              <Link href="/explore?type=3d">
-                <button className="flex items-center gap-2 px-6 py-3 text-sm font-body font-semibold rounded-sm text-white transition-all hover:opacity-90" style={{ background: 'var(--terracotta)' }}>
-                  <Box size={16} /> {t('home.3d.cta')}
-                </button>
-              </Link>
-            </div>
-            <div className="relative">
-              <div className="rounded-sm overflow-hidden" style={{ aspectRatio: '4/3' }}>
-                <img src={HERO_3D} alt="3D Documentation" className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute -top-3 -right-3 w-16 h-16 rounded-sm opacity-20" style={{ background: 'var(--terracotta)' }} />
-              <div className="absolute -bottom-3 -left-3 w-10 h-10 rounded-sm opacity-20" style={{ background: 'var(--gold)' }} />
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

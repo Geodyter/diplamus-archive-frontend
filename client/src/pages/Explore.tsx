@@ -27,6 +27,8 @@ export default function Explore() {
   const initialQuery = params.get('q') || '';
   // Collections page passes ?period=X — maps to period_id filter
   const initialPeriod = params.get('period') || params.get('period_id') || '';
+  // Home page materials section passes ?material=X
+  const initialMaterial = params.get('material') || '';
 
   // State
   const [query, setQuery] = useState(initialQuery);
@@ -35,8 +37,10 @@ export default function Explore() {
   const [sort, setSort] = useState('title');
   const [page, setPage] = useState(1);
   const [filterPeriod, setFilterPeriod] = useState(initialPeriod);
-  // Multi-material: set of selected material IDs
-  const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
+  // Multi-material: set of selected material IDs (pre-populate from URL if ?material= provided)
+  const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(
+    initialMaterial ? new Set([initialMaterial]) : new Set()
+  );
   // Category filter: selected top-level category ID
   const [filterCategory, setFilterCategory] = useState('');
   // Subcategory (Είδος αντικειμένου): selected child category ID
