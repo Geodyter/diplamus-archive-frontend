@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Search, Grid3X3, List, SlidersHorizontal, X, ChevronDown, ChevronRight } from 'lucide-react';
-import { api, NavigationPoint, Material, Period, NavigationPointCategory, getTranslation } from '@/lib/api';
+import { api, NavigationPoint, Material, Period, NavigationPointCategory, Usage, getTranslation } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ExhibitCard from '@/components/ExhibitCard';
 import { LoadingSpinner, ErrorState, EmptyState, PageHeader, Pagination } from '@/components/LoadingState';
@@ -45,6 +45,8 @@ export default function Explore() {
   const [filterCategory, setFilterCategory] = useState('');
   // Subcategory (Είδος αντικειμένου): selected child category ID
   const [filterSubcategory, setFilterSubcategory] = useState('');
+  // Usage (Χρήση / τρόπος απόκτησης): selected usage ID
+  const [filterUsage, setFilterUsage] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Data
@@ -57,6 +59,7 @@ export default function Explore() {
   // Taxonomy
   const [materials, setMaterials] = useState<Material[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
+  const [usages, setUsages] = useState<Usage[]>([]);
   // Categories: full list (top-level items have children = subcategories)
   const [allCategories, setAllCategories] = useState<NavigationPointCategory[]>([]);
 
@@ -67,10 +70,12 @@ export default function Explore() {
       api.getPeriods({ limit: 100 }),
       // Use limit=1000 to get all categories (API uses 'limit', not 'pageSize')
       api.getCategories({ limit: 1000 }),
-    ]).then(([m, p, c]) => {
+      api.getUsages({ limit: 100 }),
+    ]).then(([m, p, c, u]) => {
       setMaterials(Array.isArray(m.data) ? m.data : []);
       setPeriods(Array.isArray(p.data) ? p.data : []);
       setAllCategories(Array.isArray(c.data) ? c.data : []);
+      setUsages(Array.isArray(u.data) ? u.data : []);
     }).catch(console.error);
   }, []);
 
@@ -115,6 +120,9 @@ export default function Explore() {
         apiParams.category_id = filterCategory;
       }
 
+      // Usage filter
+      if (filterUsage) apiParams.usage_id = filterUsage;
+
       const res = await api.getNavigationPoints(apiParams as any);
       setExhibits(Array.isArray(res.data) ? res.data : []);
       setTotalPages(res.meta?.last_page ?? 1);
@@ -124,7 +132,7 @@ export default function Explore() {
     } finally {
       setLoading(false);
     }
-  }, [page, query, sort, filterPeriod, selectedMaterials, filterCategory, filterSubcategory, t]);
+  }, [page, query, sort, filterPeriod, selectedMaterials, filterCategory, filterSubcategory, filterUsage, t]);
 
   useEffect(() => {
     loadExhibits();
@@ -141,6 +149,7 @@ export default function Explore() {
     setFilterPeriod('');
     setFilterCategory('');
     setFilterSubcategory('');
+    setFilterUsage('');
     setQuery('');
     setInputValue('');
     setPage(1);
@@ -162,7 +171,7 @@ export default function Explore() {
     setPage(1);
   };
 
-  const hasActiveFilters = selectedMaterials.size > 0 || filterPeriod || filterCategory || filterSubcategory || query;
+  const hasActiveFilters = selectedMaterials.size > 0 || filterPeriod || filterCategory || filterSubcategory || filterUsage || query;
 
   // Safe helper: get taxonomy name without crashing if translations is not an array
   const safeName = (item: { translations?: any[]; name?: string } | undefined, langCode: string): string => {
@@ -237,6 +246,16 @@ export default function Explore() {
             Δεν υπάρχουν υποκατηγορίες
           </p>
         </div>
+      )}
+
+      {/* Χρήση — radio (usage_id) */}
+      {usages.length > 0 && (
+        <FilterGroupRadio
+          label="Χρήση"
+          options={usages.map(u => ({ value: String(u.id), label: safeName(u, lang) || u.name }))}
+          value={filterUsage}
+          onChange={v => { setFilterUsage(v); setPage(1); }}
+        />
       )}
     </div>
   );
@@ -370,6 +389,12 @@ export default function Explore() {
                   <FilterChip
                     label={safeName(topLevelCategories.find(c => String(c.id) === filterCategory), lang) || filterCategory}
                     onRemove={() => { setFilterCategory(''); setFilterSubcategory(''); setPage(1); }}
+                  />
+                )}
+                {filterUsage && (
+                  <FilterChip
+                    label={safeName(usages.find(u => String(u.id) === filterUsage), lang) || filterUsage}
+                    onRemove={() => { setFilterUsage(''); setPage(1); }}
                   />
                 )}
               </div>

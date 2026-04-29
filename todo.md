@@ -64,7 +64,7 @@
 - [x] Developer instructions: αναζήτηση κειμένου (?content= endpoint) — ενεργοποιήθηκε η search bar, content= λειτουργεί σωστά
 
 ## Νέα Φίλτρα (2026-04-28)
-- [ ] Προσθήκη φίλτρου "Χρήση" (usage_id) στο sidebar της σελίδας Εξερεύνησης
+- [x] Προσθήκη φίλτρου "Χρήση" (usage_id) στο sidebar της σελίδας Εξερεύνησης — FilterGroupRadio, usage_id API param, active chip, clearFilters
 
 ## Home Page Διορθώσεις (2026-04-28)
 - [x] Αφαίρεση 3D documentation section από την αρχική σελίδα
