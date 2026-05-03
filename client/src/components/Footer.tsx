@@ -5,8 +5,8 @@
 import { Link } from 'wouter';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const DIPLAMUS_LOGO = 'https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/diplamus-logo-official_b35ca23f.png';
-const ESPA_LOGOS = 'https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/espa-logos_d513be63.png';
+const DIPLAMUS_LOGO = '/assets/diplamus-logo-official.png
+const ESPA_LOGOS = '/assets/espa-logos.png
 
 export default function Footer() {
   const { t } = useLanguage();

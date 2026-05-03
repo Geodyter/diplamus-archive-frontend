@@ -7,13 +7,43 @@ import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
 import * as db from "../db";
 import { ENV } from "./env";
-import type {
-  ExchangeTokenRequest,
-  ExchangeTokenResponse,
-  GetUserInfoResponse,
-  GetUserInfoWithJwtRequest,
-  GetUserInfoWithJwtResponse,
-} from "./types/manusTypes";
+// OAuth type definitions
+interface ExchangeTokenRequest {
+  grantType: string;
+  code: string;
+  refreshToken?: string;
+  clientId: string;
+  clientSecret?: string;
+  redirectUri: string;
+}
+
+interface ExchangeTokenResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  refreshToken?: string;
+}
+
+interface GetUserInfoResponse {
+  openId: string;
+  name?: string;
+  email?: string;
+  platform?: string;
+  loginMethod?: string;
+}
+
+interface GetUserInfoWithJwtRequest {
+  jwtToken: string;
+  projectId: string;
+}
+
+interface GetUserInfoWithJwtResponse {
+  openId: string;
+  name?: string;
+  email?: string;
+  platform?: string;
+  loginMethod?: string;
+}
 // Utility function
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0;
@@ -160,7 +190,7 @@ class SDKServer {
   }
 
   /**
-   * Create a session token for a Manus user openId
+   * Create a session token for a user openId
    * @example
    * const sessionToken = await sdk.createSessionToken(userInfo.openId);
    */
