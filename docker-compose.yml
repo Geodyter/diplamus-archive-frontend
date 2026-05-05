@@ -1,0 +1,29 @@
+services:
+  diplamus-frontend:
+    build: .
+    container_name: diplamus-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # DiPlaMus Archive API Key
+      DIPLAMUS_API_KEY: ${DIPLAMUS_API_KEY}
+      # Database (προαιρετικό — μόνο αν χρειαστεί auth)
+      # DATABASE_URL: ${DATABASE_URL}
+      # JWT_SECRET: ${JWT_SECRET}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Αν θέλετε να τρέχει στο ίδιο Docker network με το API:
+# networks:
+#   default:
+#     external: true
+#     name: diplamus-network

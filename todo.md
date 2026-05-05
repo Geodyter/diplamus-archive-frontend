@@ -66,8 +66,18 @@
 ## Νέα Φίλτρα (2026-04-28)
 - [x] Προσθήκη φίλτρου "Χρήση" (usage_id) στο sidebar της σελίδας Εξερεύνησης — FilterGroupRadio, usage_id API param, active chip, clearFilters
 
+## Docker & Self-hosted Deployment (2026-05-03)
+- [x] Αντιγραφή static assets στο client/public/assets/ και αντικατάσταση CloudFront URLs στον κώδικα
+- [x] Αφαίρεση Manus-specific κώδικα (vite plugin, debug collector, ManusDialog, package.json deps)
+- [x] Αφαίρεση αναφορών Manus ως κατασκευαστής — καμία αναφορά Manus στο visible UI
+- [x] Dockerfile και docker-compose.yml ετοιμασία (με health endpoint)
+- [x] Γραφή οδηγού εγκατάστασης Docker για τον developer (DEPLOYMENT.md)
+
 ## Home Page Διορθώσεις (2026-04-28)
 - [x] Αφαίρεση 3D documentation section από την αρχική σελίδα
 - [x] Ενεργοποίηση section υλικών με όλα τα 21 υλικά από το API (φόρτωση 3 σελίδων με fetchAllPages)
 - [x] Ελεγχος στατιστικών: exhibits=163, periods=3, materials=21, categories=13 — όλα σωστά
 - [x] Σύνδεση ματεριαλ links από Home στο Explore με προεπιλεγμένο φίλτρο υλικού (?material=X)
+
+## ExhibitDetail Αλλαγές (2026-05-04)
+- [x] Αφαίρεση tab "Πολυμέσα" από ExhibitDetail — μένουν μόνο Περιγραφή και Μεταδεδομένα

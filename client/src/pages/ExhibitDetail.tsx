@@ -265,7 +265,6 @@ export default function ExhibitDetail() {
               <div className="flex gap-0">
                 {[
                   { key: 'description', label: lang === 'el' ? 'Περιγραφή' : 'Description' },
-                  { key: 'media', label: t('exhibit.media') },
                   { key: 'metadata', label: t('exhibit.metadata') },
                 ].map(tab => (
                   <button
@@ -304,126 +303,6 @@ export default function ExhibitDetail() {
                     </p>
                     <p className="text-xs font-body whitespace-pre-line" style={{ color: '#4a4540' }}>{exhibit.inscription}</p>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Tab: Media ── */}
-            {activeTab === 'media' && (
-              <div className="space-y-4">
-                {/* Photo count */}
-                {photoFiles.length > 0 && (
-                  <div>
-                    <p className="text-xs font-body font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>
-                      {lang === 'el' ? 'Φωτογραφίες' : 'Photos'} ({photoFiles.length + (exhibit.image?.uri ? 1 : 0)})
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {/* Main image thumbnail */}
-                      {exhibit.image?.uri && (
-                        <button
-                          onClick={() => { setActive3D(null); setActiveMainImage(exhibit.image!.uri!); }}
-                          className="aspect-square rounded-sm overflow-hidden border-2 border-[#e8e0d8] hover:border-[#B5533C] transition-colors"
-                        >
-                          <img src={exhibit.image.uri} alt={title} className="w-full h-full object-cover" />
-                        </button>
-                      )}
-                      {photoFiles.map((file, i) => {
-                        const thumb = getFileThumbnail(file) || getFileUrl(file);
-                        return thumb ? (
-                          <button
-                            key={i}
-                            onClick={() => { setActive3D(null); setActiveMainImage(getFileUrl(file)); }}
-                            className="aspect-square rounded-sm overflow-hidden border-2 border-[#e8e0d8] hover:border-[#B5533C] transition-colors"
-                            title={file.title}
-                          >
-                            <img src={thumb} alt={file.title} className="w-full h-full object-cover" />
-                          </button>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3D Models */}
-                {model3DFiles.length > 0 && (
-                  <div>
-                    <p className="text-xs font-body font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>
-                      {lang === 'el' ? 'Τρισδιάστατα Μοντέλα' : '3D Models'} ({model3DFiles.length})
-                    </p>
-                    <div className="space-y-2">
-                      {model3DFiles.map((model, i) => {
-                        const modelUrl = getFileUrl(model);
-                        return (
-                          <div key={i} className="flex items-center gap-3 p-3 rounded-sm border border-[#e8e0d8]" style={{ background: '#faf7f2' }}>
-                            <div className="flex-shrink-0 w-10 h-10 rounded-sm flex items-center justify-center" style={{ background: '#B5533C20' }}>
-                              <Box size={18} style={{ color: 'var(--terracotta)' }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-body font-medium truncate" style={{ color: 'var(--charcoal)' }}>{model.title}</p>
-                              <p className="text-xs font-body" style={{ color: 'var(--muted-foreground)' }}>
-                                {model.file_extension?.toUpperCase()} · {model.file_size ? `${(Number(model.file_size) / 1024 / 1024).toFixed(1)} MB` : ''}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              {modelUrl && (
-                                <button
-                                  onClick={() => setActive3D(modelUrl)}
-                                  className="text-xs px-2 py-1 rounded-sm font-body font-medium transition-colors"
-                                  style={{ background: 'var(--terracotta)', color: 'white' }}
-                                >
-                                  {lang === 'el' ? 'Προβολή' : 'View'}
-                                </button>
-                              )}
-                              {modelUrl && (
-                                <a
-                                  href={modelUrl}
-                                  download
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs px-2 py-1 rounded-sm font-body font-medium border border-[#e8e0d8] hover:border-[#B5533C] transition-colors"
-                                  style={{ color: 'var(--charcoal)' }}
-                                >
-                                  <Download size={12} />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Documents */}
-                {docFiles.length > 0 && (
-                  <div>
-                    <p className="text-xs font-body font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>
-                      {lang === 'el' ? 'Έγγραφα' : 'Documents'} ({docFiles.length})
-                    </p>
-                    {docFiles.map((doc, i) => {
-                      const docUrl = getFileUrl(doc);
-                      return docUrl ? (
-                        <a
-                          key={i}
-                          href={docUrl}
-                          download
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm font-body font-medium px-3 py-2 rounded-sm border border-[#e8e0d8] hover:border-[#B5533C] hover:text-[#B5533C] transition-colors mb-2"
-                          style={{ color: 'var(--charcoal)' }}
-                        >
-                          <FileText size={14} />
-                          {doc.title || doc.file_name}
-                        </a>
-                      ) : null;
-                    })}
-                  </div>
-                )}
-
-                {!photoFiles.length && !model3DFiles.length && !videoFiles.length && !docFiles.length && !exhibit.image?.uri && (
-                  <p className="text-sm font-body italic" style={{ color: 'var(--muted-foreground)' }}>
-                    {lang === 'el' ? 'Δεν υπάρχουν πολυμέσα.' : 'No media available.'}
-                  </p>
                 )}
               </div>
             )}

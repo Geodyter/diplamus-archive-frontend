@@ -59,7 +59,7 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/diplamus-logo-official_b35ca23f.png"
+                src="/assets/diplamus-logo-official.png"
                 alt="DiPlaMus Archive"
                 className="h-9 w-auto object-contain"
               />

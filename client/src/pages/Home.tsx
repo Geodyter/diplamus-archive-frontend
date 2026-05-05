@@ -9,7 +9,7 @@ import { ArrowRight, Box, Image as ImageIcon, BookOpen, MapPin } from 'lucide-re
 import { api, Material, Period, getTranslation, getImageUrl } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const HERO_IMAGE = 'https://d2xsxph8kpxj0f.cloudfront.net/106430101/F3kxnRmej5pvuShZNciPcy/hero-archive-c6kQCwMZzz2XQ7xKyyaXPK.webp';
+const HERO_IMAGE = '/manus-storage/hero-archive_6dc18aa3.jpg';
 
 /**
  * Fetch all pages of a paginated endpoint and return combined data array.
