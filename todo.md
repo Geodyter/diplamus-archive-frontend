@@ -81,3 +81,7 @@
 
 ## ExhibitDetail Αλλαγές (2026-05-04)
 - [x] Αφαίρεση tab "Πολυμέσα" από ExhibitDetail — μένουν μόνο Περιγραφή και Μεταδεδομένα
+
+## 3D Viewer Fix (2026-05-05)
+- [ ] Fix 3D model loading broken after recent changes
+- [x] Reorder gallery tabs: Photos first, then 3D models last

@@ -170,7 +170,17 @@ export default function ExhibitDetail() {
             {/* Thumbnail strip */}
             {(allPhotoUrls.length > 1 || model3DFiles.length > 0) && (
               <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-                {/* 3D model thumbnails */}
+                {/* Photo thumbnails — first */}
+                {allPhotoUrls.map((imgUrl, i) => (
+                  <button
+                    key={`img-${i}`}
+                    onClick={() => { setActive3D(null); setActiveMainImage(imgUrl); }}
+                    className={`flex-shrink-0 w-16 h-16 rounded-sm border-2 overflow-hidden transition-colors ${!active3D && currentMainImage === imgUrl ? 'border-[#B5533C]' : 'border-[#e8e0d8] hover:border-[#B5533C]/50'}`}
+                  >
+                    <img src={imgUrl} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  </button>
+                ))}
+                {/* 3D model thumbnails — last */}
                 {model3DFiles.map((model, i) => {
                   const modelUrl = getFileUrl(model);
                   return (
@@ -185,16 +195,6 @@ export default function ExhibitDetail() {
                     </button>
                   );
                 })}
-                {/* Photo thumbnails */}
-                {allPhotoUrls.map((imgUrl, i) => (
-                  <button
-                    key={`img-${i}`}
-                    onClick={() => { setActive3D(null); setActiveMainImage(imgUrl); }}
-                    className={`flex-shrink-0 w-16 h-16 rounded-sm border-2 overflow-hidden transition-colors ${!active3D && currentMainImage === imgUrl ? 'border-[#B5533C]' : 'border-[#e8e0d8] hover:border-[#B5533C]/50'}`}
-                  >
-                    <img src={imgUrl} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  </button>
-                ))}
               </div>
             )}
 
